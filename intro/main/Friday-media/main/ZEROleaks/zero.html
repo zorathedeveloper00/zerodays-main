@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🔧 ZeroTools Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      display: flex;
+      transition: all 0.3s ease;
+    }
+
+    body.light {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #1e293b;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow-y: auto;
+      padding: 1rem;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+
+    body.light .sidebar {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .sidebar h2 {
+      border-bottom: 1px solid #334155;
+      padding-bottom: 0.3rem;
+      margin-top: 1.2rem;
+      color: #38bdf8;
+    }
+
+    .sidebar a {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #334155;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background: #334155;
+    }
+
+    body.light .sidebar a:hover {
+      background: #cbd5e1;
+    }
+
+    .main {
+      margin-left: 280px;
+      padding: 2rem;
+      flex: 1;
+    }
+
+    .main h1 {
+      color: #38bdf8;
+    }
+
+    .menu-btn {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      background: none;
+      border: none;
+      color: #f1f5f9;
+      font-size: 1.8rem;
+      cursor: pointer;
+      z-index: 1100;
+      display: none;
+    }
+
+    .search-box {
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: #334155;
+      color: #f1f5f9;
+    }
+
+    body.light .search-box input {
+      background: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .toggle-mode {
+      margin-top: 1rem;
+      display: block;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #38bdf8;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        margin-left: 0;
+        padding-top: 4rem;
+      }
+
+      .menu-btn {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hamburger -->
+<button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="search-box">
+    <input type="text" id="searchInput" onkeyup="filterLinks()" placeholder="🔍 Search tools..." />
+  </div>
+
+  <h2>🌐 Web / IP / Domain</h2>
+  <a href="main/org/iplookup.html">🌍 IP Lookup</a>
+  <a href="main/org/portscannerip.html">🔎 Port Scanner</a>
+  <a href="main/org/subdomainlister.html">📡 Subdomain Finder</a>
+  <a href="main/org/webscraper.html">🕸️ Web Scraper</a>
+  <a href="main/org/websift.html">🌐 Web Sift</a>
+  <a href="main/org/v1domainfinder.html">🌐 v1 Domain Finder</a>
+  <a href="main/org/vulscanpro.html">🛡️ Vulnerability Scanner</a>
+  <a href="main/org/org/Whatweb.html">🔍 WhatWeb Pro+</a>
+  <a href="main/org/WhatWeb.html">🔍 WhatWeb Lite</a>
+
+  <h2>🔐 Security & Crypto</h2>
+  <a href="main/org/pgen.html">🔐 Password Generator</a>
+  <a href="main/org/sifreanalizai.html">🧠 Password Strength</a>
+  <a href="main/org/tokenbreaker.html">🪙 JWT Token Breaker</a>
+  <a href="main/org/zipcracker.html">🧨 Zip Cracker</a>
+  <a href="main/org/firebasereaper.html">🔥 Firebase Reaper</a>
+  <a href="main/org/stncryppre1.html">🔒 Text Encryptor</a>
+ 
+  <a href="main/org/shellspoof.html">🧙 File Spoofer</a>
+
+  <h2>📂 File / Analyze</h2>
+  <a href="main/org/base64image.html">🖼️ Base64 Image Tool</a>
+  <a href="main/org/encodedecode.html">🔁 Encode / Decode</a>
+  <a href="main/org/pdfinfo.html">📄 PDF Info Tool</a>
+  <a href="main/org/emailheaderanalyzer.html">✉️ Email Header Analyzer</a>
+  <a href="main/org/stnexif.html">📸 EXIF Metadata</a>
+  <a href="main/org/hashfinderfile.html">🔎 Hash Finder</a>
+  <a href="main/org/likegrep.html">📂 Text File Analyzer</a>
+  <a href="main/org/strings.html">🔤 String Extractor</a>
+  <a href="main/org/nreaper.html">📡 HTTP Packet Analyzer</a>
+
+  <h2>🛠️ Utility Tools</h2>
+  <a href="main/org/convert.html">🔄 Converter</a>
+  <a href="main/org/function.html">⚙️ Function Tester</a>
+  <a href="main/org/led.html">💡 LED Text Display</a>
+  <a href="main/org/opener.html">📂 File Opener</a>
+  <a href="main/org/renkdegistirici.html">🎨 Color Replacer</a>
+  <a href="main/org/timestampmanipulation.html">🕒 Timestamp Modifier</a>
+
+  <h2>📚 Books & ISBN</h2>
+  <a href="main/org/isbinfogoogleapi.html">📘 Google Books Lookup</a>
+  <a href="main/org/isbnnumber.html">🔢 ISBN Generator</a>
+
+  <h2>🌐 AI / Search</h2>
+  <a href="main/org/search.html">🔍 DuckDuckGo Search</a>
+  <a href="main/org/search3.html">🌐 Basic Search Engine</a>
+
+  <h2>📁 Wordlist & Other</h2>
+
+  <a href="main/org/ZCPM.html">⚙️ Plugin Manager</a>
+  <a href="main/org/youtubeosint.html">📹 YouTube OSINT</a>
+  <a href="main/org/UIC.html">👤 Username Checker</a>
+  <a href="main/org/sllc.html">👁️ EyeWitness Web</a>
+  <a href="main/org/Encryptionweb.html">🔐 Web Encryptor</a>
+  <a href="main/org/Instagram.html">📸 Instagram Finder</a>
+<a href="main/org/socialtracker.html">📺 YouTube ID Finder</a>
+<a href="main/org/Phonenumberslookup.html">📱 Phone Lookup</a>
+<a href="main/org/usergen.html">👤Social Media Style Username Generator</a>
+<a href="main/org/tiktokosint.html">🔍tiktokosint(fixing)</a>
+<a href="main/code/zero.html">🚧beta tools</a>
+  <span class="toggle-mode" onclick="toggleTheme()">🌗 Toggle Theme</span>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <h1>🛠️ Welcome to ZeroTools Dashboard</h1>
+  <p>Select a tool from the sidebar to begin. All tools are 100% frontend and require no backend or database.</p>
+</div>
+
+<!-- Scripts -->
+<script>
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  function filterLinks() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const links = document.querySelectorAll('.sidebar a');
+    links.forEach(link => {
+      link.style.display = link.textContent.toLowerCase().includes(query) ? 'block' : 'none';
+    });
+  }
+
+  function toggleTheme() {
+    document.body.classList.toggle('light');
+  }
+</script>
+</body>
+</html>

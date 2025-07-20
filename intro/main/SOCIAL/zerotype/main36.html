@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🧬 Zerotype OS - Tool Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      height: 100vh;
+      background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFVOZ2CsKQIPT0Lk06f5bNALaBIuEhMWppBg&s');
+      color: red;
+    }
+    #sidebar {
+      width: 260px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px;
+      border-right: 1px solid red;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    #sidebar.hidden {
+      transform: translateX(-100%);
+    }
+    #sidebar h2 {
+      color: red;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    #sidebar a {
+      color: red;
+      text-decoration: none;
+      padding: 10px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      display: block;
+      transition: background 0.2s;
+    }
+    #sidebar a:hover {
+      background: rgba(255, 0, 0, 0.2);
+    }
+    #main {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      position: relative;
+    }
+    h1 {
+      font-size: 26px;
+      color: red;
+      margin-bottom: 10px;
+    }
+    select {
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      color: red;
+      border-radius: 6px;
+      border: 1px solid red;
+      width: 100%;
+      font-size: 15px;
+    }
+    .preview {
+      margin-top: 25px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid red;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .preview h3 {
+      color: red;
+    }
+    #toggleBtn {
+      position: absolute;
+      top: 20px;
+      left: 10px;
+      background: red;
+      color: black;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    #toggleBtn:hover {
+      background: black;
+      color: red;
+      border: 1px solid red;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar">
+    <h2>🧬 Zerotype</h2>
+    <a href="diedland/wallpaper/index.html">🖼️ Google Wallpaper Finder</a>
+    <a href="diedland/lcchecker/index.html">🧾 Multi-Repo License Finder</a>
+  </div>
+
+  <div id="main">
+    <button id="toggleBtn" onclick="toggleSidebar()">☰ Toggle Menu</button>
+    <h1>🚀 Welcome to Zerotype Dashboard</h1>
+    <p>Use the navigation or dropdown to explore your tools.</p>
+    <div class="preview" id="previewBox">
+      <strong>Tool preview will appear here when selected.</strong>
+    </div>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("hidden");
+    }
+  </script>
+
+</body>
+</html>

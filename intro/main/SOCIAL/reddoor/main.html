@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redoor Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFVOZ2CsKQIPT0Lk06f5bNALaBIuEhMWppBg&s');
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+background: rgba(0, 0, 0, 0.5);
+      color: red;
+      position: relative;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+
+    .sidebar.closed {
+      width: 60px;
+    }
+
+    .sidebar h2 {
+      font-size: 1.5rem;
+      text-align: center;
+      padding: 1rem;
+      border-bottom: 1px solid red;
+    }
+
+    .sidebar a {
+      display: block;
+      color: red;
+      padding: 1rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+background: rgba(0, 0, 0, 0.5);
+    }
+
+    .toggle-btn {
+      position: absolute;
+      top: 10px;
+      right: -15px;
+background: rgba(0, 0, 0, 0.5);
+      color: red;
+      padding: 0.5rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      border: 2px solid red;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    .main h1 {
+      font-size: 2rem;
+      color: red;
+    }
+
+    /* Responsive text hide on collapse */
+    .sidebar.closed a span {
+      display: none;
+    }
+
+    .sidebar a i {
+      margin-right: 10px;
+    }
+
+    .sidebar.closed h2 {
+      display: none;
+    }
+  h1, p {
+    color: red;
+  }
+  </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <h2>🟥 Redoor</h2>
+  <a href="main.html"><i>🔄</i><span> Refresh Again</span></a>
+  <a href="doorsec/backtrack.html"><i>🖼️</i><span> Image Search</span></a>
+  <a href="doorsec/crpyto.html"><i>💰</i><span> Crypto Tracker</span></a>
+  <a href="doorsec/dork.html"><i>🏢</i><span> Business Finder</span></a>
+  <a href="doorsec/recipe.html"><i>🍽️</i><span> Recipe Finder</span></a>
+  <a href="doorsec/ytfdrmusic.html"><i>🎵</i><span> YouTube Music Finder</span></a>
+  <a href="doorsec/snapper(color).html"><i>🎨</i><span> Color Picker Tool</span></a>
+  <a href="doorsec/sd.html"><i>🌍</i><span> Travel Explorer</span></a>
+  <a href="doorsec/backtrack2.html"><i>👤</i><span>Personal Detail Generator</span></a>
+<a href="doorsec/landdrive.html"><i>📍</i><span> landmark finder</span></a>
+
+  <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+</div>
+
+
+  <div class="main">
+    <h1>Welcome to Redoor Dashboard</h1>
+    <p>This is your central control panel. Use the sidebar to access your tools.</p>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("closed");
+    }
+  </script>
+
+</body>
+</html>

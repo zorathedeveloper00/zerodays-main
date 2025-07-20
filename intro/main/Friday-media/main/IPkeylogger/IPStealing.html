@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced IP Logger</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFVOZ2CsKQIPT0Lk06f5bNALaBIuEhMWppBg&s'); 
+      background-color: rgb(255, 255, 255);
+      color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #2c2c2c;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    h1, h2 {
+      text-align: center;
+      color: rgb(51, 255, 0);
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    input[type="url"], input[type="text"] {
+      padding: 10px;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      font-size: 15px;
+      background-color: #444;
+      color: #fff;
+    }
+    button {
+      padding: 10px;
+      background-color: #ff4757;
+      color: green;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #e84118;
+    }
+    .info-box {
+      background: #333;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #555;
+      font-size: 13px;
+    }
+    .hidden {
+      display: none;
+    }
+    #qrCode {
+      margin-top: 10px;
+      text-align: center;
+    }
+    .button-group {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .public-link-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .public-link-list li {
+      margin: 4px 0;
+      background: #444;
+      padding: 8px;
+      border: 1px solid #bbb;
+      border-radius: 5px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Advanced IP Logger</h1>
+    <form id="linkForm">
+      <input type="url" id="urlInput" placeholder="Enter URL to shorten & track" required />
+      <input type="text" id="customAlias" placeholder="Optional custom alias" />
+      <label class="checkbox-label">
+        <input type="checkbox" id="makePublic" />
+        Make this link public
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="aiSmartLogger" />
+        Enable AI Smart Logger
+      </label>
+      <button type="submit">Generate Tracking Link</button>
+    </form>
+
+    <div class="info-box hidden" id="linkInfo">
+      <h2>Generated Link Details</h2>
+      <p><strong>Original URL:</strong> <span id="originalUrl"></span></p>
+      <p><strong>Short URL:</strong> <a id="shortLink" href="#" target="_blank"></a></p>
+      <p><strong>Tracking Code:</strong> <span id="trackingCode"></span></p>
+      <p><strong>Tracking Access URL:</strong> <a id="trackLink" href="#" target="_blank"></a></p>
+      <div id ="qrCode"></div>
+      <div class="button-group">
+        <button id="logVisitorBtn" type="button">Log Visitor Info</button>
+        <button id="exportLogsBtn" type="button">Export Logs</button>
+        <button id="analyzeDataBtn" type="button">Analyze Visitor Data</button>
+      </div>
+    </div>
+
+    <div class="info-box hidden" id="logs">
+      <h2>Visitor Logs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date/Time</th>
+            <th>IP</th>
+            <th>Country</th>
+            <th>City</th>
+            <th>User Agent</th>
+            <th>Referrer</th>
+          </tr>
+        </thead>
+        <tbody id="logTable"></tbody>
+      </table>
+    </div>
+
+    <div class="info-box" id="publicLinksBox">
+      <h2>Public Links</h2>
+      <ul class="public-link-list" id="publicLinksList"></ul>
+    </div>
+
+    <div class="info-box hidden" id="analysisResult">
+      <h2>Visitor Data Analysis</h2>
+      <p id="analysisOutput"></p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const logTable = document.getElementById("logTable");
+    const logsArray = [];
+    const publicLinksList = document.getElementById("publicLinksList");
+
+    document.getElementById("linkForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const originalUrl = document.getElementById("urlInput").value;
+      const aliasInput = document.getElementById("customAlias").value.trim();
+      const makePublic = document.getElementById("makePublic").checked;
+      const aiSmartLogger = document.getElementById("aiSmartLogger").checked;
+      const shortCode = aliasInput !== "" ? aliasInput : Math.random().toString(36).substring(2, 8).toUpperCase();
+      const trackingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      const shortUrl = `https://Zerodays.link/redirect.html?code=${shortCode}&url=${encodeURIComponent(originalUrl)}`;
+      const accessUrl = `https://Zerodays.link/redirect.html?track=${trackingCode}`;
+
+      document.getElementById("originalUrl").textContent = originalUrl;
+      document.getElementById("shortLink").textContent = shortUrl;
+      document.getElementById("shortLink").href = shortUrl;
+      document.getElementById("trackingCode").textContent = trackingCode;
+      document.getElementById("trackLink").textContent = accessUrl;
+      document.getElementById("trackLink").href = accessUrl;
+
+      document.getElementById("linkInfo").classList.remove("hidden");
+      document.getElementById("logs").classList.remove("hidden");
+
+      const qrContainer = document.getElementById("qrCode");
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, {
+        text: shortUrl,
+        width: 150,
+        height: 150,
+      });
+
+      if (makePublic) {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${shortCode}</strong>: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
+        publicLinksList.appendChild(li);
+      }
+    });
+
+    document.getElementById("logVisitorBtn").addEventListener("click", async () => {
+      const now = new Date().toLocaleString();
+      const userAgent = navigator.userAgent;
+      const referrer = document.referrer || "Direct";
+
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+
+        const log = {
+          date: now,
+          ip: data.ip,
+          country: data.country_name,
+          city: data.city,
+          userAgent: userAgent,
+          referrer: referrer
+        };
+
+        logsArray.push(log);
+        const row = `
+          <tr>
+            <td>${log.date}</td>
+            <td>${log.ip}</td>
+            <td>${log.country}</td>
+            <td>${log.city}</td>
+            <td>${log.userAgent}</td>
+            <td>${log.referrer}</td>
+          </tr>
+        `;
+        logTable.innerHTML += row;
+      } catch (err) {
+        console.error("Failed to fetch IP info:", err);
+      }
+    });
+
+    document.getElementById("exportLogsBtn ").addEventListener("click", () => {
+      if (logsArray.length === 0) {
+        alert("No logs to export yet!");
+        return;
+      }
+
+      let logText = "Visitor Logs:\n\n";
+      logsArray.forEach((log, index) => {
+        logText += `#${index + 1}\n`;
+        logText += `Date/Time: ${log.date}\n`;
+        logText += `IP: ${log.ip}\n`;
+        logText += `Country: ${log.country}\n`;
+        logText += `City: ${log.city}\n`;
+        logText += `User  Agent: ${log.userAgent}\n`;
+        logText += `Referrer: ${log.referrer}\n`;
+        logText += `-------------------------\n`;
+      });
+
+      const blob = new Blob([logText], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "visitor_logs.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("analyzeDataBtn").addEventListener("click", () => {
+      if (logsArray.length === 0) {
+        alert("No logs available for analysis!");
+        return;
+      }
+
+      const countryCount = {};
+      logsArray.forEach(log => {
+        countryCount[log.country] = (countryCount[log.country] || 0) + 1;
+      });
+
+      const analysisOutput = Object.entries(countryCount)
+        .map(([country, count]) => `${country}: ${count} visits`)
+        .join('<br>');
+
+      document.getElementById("analysisOutput").innerHTML = analysisOutput;
+      document.getElementById("analysisResult").classList.remove("hidden");
+    });
+
+    // Consent Page
+    function createConsentPage() {
+      const consentPage = document.createElement('div');
+      consentPage.innerHTML = `
+        <div class="container">
+          <h1>Consent Required</h1>
+          <p>To access the free resources, please agree to the terms and conditions.</p>
+          <button id="agreeBtn">Agree</button>
+        </div>
+      `;
+      document.body.innerHTML = '';
+      document.body.appendChild(consentPage);
+
+      document.getElementById('agreeBtn').addEventListener('click', () => {
+        alert('Thank you for agreeing! You now have access to the free resources.');
+        // Redirect to the resources or perform any action needed
+      });
+    }
+
+    // Redirect to consent page when access URL is clicked
+    document.getElementById("trackLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      createConsentPage();
+    });
+  </script>
+</body>
+</html>

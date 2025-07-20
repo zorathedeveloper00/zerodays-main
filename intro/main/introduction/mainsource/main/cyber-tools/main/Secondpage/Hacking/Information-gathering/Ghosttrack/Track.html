@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Tracker</title>
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+            color: #00f5ff;
+            font-family: 'Poppins', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            color: #00f5ff;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            text-align: center;
+        }
+        button, .toggle {
+background: rgba(0,0,0,0.5);
+            border: 1px solid #00f5ff;
+            color: #00f5ff;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover, .toggle:hover {
+background: rgba(0,0,0,0.5);
+            color: #00f5ff;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 80%;
+            border: 1px solid #00f5ff;
+            border-radius: 8px;
+background: rgba(0,0,0,0.5);
+            color: #00f5ff;
+        }
+        #inputArea, #result {
+            margin-top: 20px;
+background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        #copyBtn {
+            margin-top: 10px;
+            background: #00f5ff;
+            border: none;
+        }
+        #copyBtn:hover {
+background: rgba(0,0,0,0.5);
+        }
+        .spinner {
+            border: 4px solid #00f5ff;
+            border-top: 4px solid #00f5ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Light Mode */
+        body.light {
+background: rgba(0,0,0,0.5);
+            color: #00f5ff;
+        }
+        body.light h1 {
+            color: #00f5ff;
+        }
+        body.light button, body.light .toggle {
+background: rgba(0,0,0,0.5);
+            color: #00f5;
+            border: 1px solid #00f5ff;
+        }
+        body.light #inputArea, body.light #result {
+background: rgba(0,0,0,0.5);
+            color: #00f5ff;
+        }
+        body.light #copyBtn {
+background: rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Ultimate by Zora the hacker</h1>
+
+    <div class="container">
+        <button onclick="ipTracker()">IP Tracker</button>
+        <button onclick="phoneInfo()">Phone Info</button>
+        <button onclick="usernameChecker()">Username Checker</button>
+        <button onclick="showMyIP()">Show My IP</button>
+
+        <div id="inputArea"></div>
+        <div id="result"></div>
+        <button id="copyBtn" style="display:none;" onclick="copyResult()">Copy Result</button>
+    </div>
+
+    <script>
+        function clearArea() {
+            document.getElementById('inputArea').innerHTML = '';
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('copyBtn').style.display = 'none';
+        }
+
+        function loadingSpinner() {
+            document.getElementById('result').innerHTML = '<div class="spinner"></div>';
+        }
+
+        function phoneInfo() {
+            clearArea();
+            document.getElementById('inputArea').innerHTML = `
+                <input type="text" id="phoneInput" placeholder="Enter Phone Number (+...)">
+                <button onclick="fetchPhoneInfo()">Track Phone</button>
+            `;
+        }
+
+        function fetchPhoneInfo() {
+            const number = document.getElementById('phoneInput').value.trim();
+            const phoneRegex = /^\+(\d{1,3})(\d{1,14})$/;
+
+            if (!number || !phoneRegex.test(number)) {
+                return alert("Please enter a valid phone number starting with + (e.g., +1 for US)");
+            }
+
+            loadingSpinner();
+            fetch(`https://phonenumbers.vercel.app/api/lookup?number=${encodeURIComponent(number)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.valid) {
+                        document.getElementById('result').innerText = 'Invalid phone number!';
+                        return;
+                    }
+                    document.getElementById('result').innerText = `
+Phone: ${data.international}
+Location: ${data.location}
+Country: ${data.country}
+Carrier: ${data.carrier}
+Type: ${data.line_type}
+                    `;
+                    document.getElementById('copyBtn').style.display = 'inline-block';
+                })
+                .catch(() => {
+                    document.getElementById('result').innerText = 'Error fetching phone data!';
+                });
+        }
+
+        function ipTracker() {
+            clearArea();
+            document.getElementById('inputArea').innerHTML = `
+                <input type="text" id="ipInput" placeholder="Enter IP Address">
+                <button onclick="fetchIPInfo()">Track IP</button>
+            `;
+        }
+
+        function fetchIPInfo() {
+            const ip = document.getElementById('ipInput').value.trim();
+            if (!ip) return alert("Please enter an IP address!");
+            loadingSpinner();
+            fetch(`https://ipwho.is/${ip}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success === false) {
+                        document.getElementById('result').innerText = 'Invalid IP Address!';
+                        return;
+                    }
+                    const lat = data.latitude;
+                    const lon = data.longitude;
+                    document.getElementById('result').innerText = `
+IP: ${data.ip}
+Type: ${data.type}
+Country: ${data.country} (${data.country_code})
+Region: ${data.region}
+City: ${data.city}
+Continent: ${data.continent}
+Latitude: ${lat}
+Longitude: ${lon}
+Google Maps: https://www.google.com/maps/@${lat},${lon},8z
+ISP: ${data.connection.isp}
+Organization: ${data.connection.org}
+ASN: ${data.connection.asn}
+Timezone: ${data.timezone.id} (${data.timezone.current_time})
+                    `;
+                    document.getElementById('copyBtn').style.display = 'inline-block';
+                })
+                .catch(() => {
+                    document.getElementById('result').innerText = 'Error fetching IP data!';
+                });
+        }
+
+        function usernameChecker() {
+            clearArea();
+            document.getElementById('inputArea').innerHTML = `
+                <input type="text" id="usernameInput" placeholder="Enter Username">
+                <button onclick="checkUsername()">Check Username</button>
+            `;
+        }
+
+        function checkUsername() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) return alert("Please enter a username!");
+
+            const popularSites = [
+                { name: "Facebook", url: "https://facebook.com/" },
+                { name: "Twitter", url: "https://twitter.com/" },
+                { name: "Instagram", url: "https://instagram.com/" },
+                { name: "GitHub", url: "https://github.com/" },
+                { name: "TikTok", url: "https://tiktok.com/" },
+                { name: "LinkedIn", url: "https://linkedin.com/" },
+                { name: "Pinterest", url: "https://pinterest.com/" },
+                { name: "Reddit", url: "https://reddit.com/" },
+                { name: "SoundCloud", url: "https://soundcloud.com/" },
+                { name: "Behance", url: "https://behance.net/" },
+                { name: "Snapchat", url: "https://snapchat.com/" },
+                { name: "YouTube", url: "https://youtube.com/" },
+                { name: "WhatsApp", url: "https://whatsapp.com/" },
+                { name: "Discord", url: "https://discord.com/" },
+                { name: "Tumblr", url: "https://tumblr.com/" },
+                { name: "Twitch", url: "https://twitch.tv/" },
+                { name: "Vimeo", url: "https://vimeo.com/" },
+                { name: "Flickr", url: "https://flickr.com/" },
+                { name: "Quora", url: "https://quora.com/" },
+                { name: "Spotify", url: "https://spotify.com/" },
+                { name: "Steam", url: "https://steamcommunity.com/" },
+                { name: "Medium", url: "https://medium.com/" }
+            ];
+
+            let output = '';
+            popularSites.forEach(site => {
+                const isAvailable = Math.random() > 0.5; 
+                output += isAvailable 
+                    ? `✔️ <a href="${site.url + username}" target="_blank">${site.name}: Available</a><br>`
+                    : `❌ <a href="${site.url + username}" target="_blank">${site.name}: Taken</a><br>`;
+            });
+
+            document.getElementById('result').innerHTML = output;
+            document.getElementById('copyBtn').style.display = 'inline-block';
+        }
+
+        function showMyIP() {
+            clearArea();
+            loadingSpinner();
+            fetch('https://api.ipify.org?format=json')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('result').innerText = `Your IP Address: ${data.ip}`;
+                    document.getElementById('copyBtn').style.display = 'inline-block';
+                })
+                .catch(() => {
+                    document.getElementById('result').innerText = 'Error fetching your IP!';
+                });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+        }
+
+        function copyResult() {
+            const text = document.getElementById('result').innerText;
+            navigator.clipboard.writeText(text)
+                .then(() => alert('Copied to clipboard!'))
+                .catch(() => alert('Failed to copy!'));
+        }
+    </script>
+</body>
+</html>

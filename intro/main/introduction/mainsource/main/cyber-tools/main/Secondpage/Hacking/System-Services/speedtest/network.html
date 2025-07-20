@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Speed Test Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+background: rgba(0,0,0,0.7);
+            padding: 40px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        h1, div {
+            color:#00f5ff;
+        }
+
+        .test-info p {
+            font-size: 16px;
+            color:#00f5ff;
+        }
+
+        .speed-results {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-around;
+           color:#00f5ff;
+        }
+
+        .speed-result {
+            text-align: center;
+        }
+
+        .speed-result h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color:#00f5ff;
+        }
+
+        .speed-value {
+            font-size: 36px;
+            font-weight: bold;
+            color:#00f5ff;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color:#00f5ff;
+            color: blue;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+background: rgba(0,0,0,0.5);
+        }
+
+        #graph-container {
+            margin-top: 30px;
+        }
+
+        .export {
+            margin-top: 20px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Speed Test</h1>
+        <div class="test-info">
+            <p>Test your internet connection's download and upload speeds using real-time data.</p>
+        </div>
+
+        <div class="speed-results">
+            <div class="speed-result">
+                <h2>Download Speed</h2>
+                <div id="download-speed" class="speed-value">0 Mbps</div>
+            </div>
+            <div class="speed-result">
+                <h2>Upload Speed</h2>
+                <div id="upload-speed" class="speed-value">0 Mbps</div>
+            </div>
+        </div>
+
+        <button id="start-test" onclick="startTest()">Start Test</button>
+
+        <div id="graph-container">
+            <canvas id="speed-graph"></canvas>
+        </div>
+
+        <div class="export">
+            <button onclick="exportData()">Export to CSV</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let downloadSpeed = 0;
+        let uploadSpeed = 0;
+        let speedData = {
+            download: [],
+            upload: []
+        };
+
+        const downloadSpeedDisplay = document.getElementById('download-speed');
+        const uploadSpeedDisplay = document.getElementById('upload-speed');
+        const speedGraph = document.getElementById('speed-graph').getContext('2d');
+        const startTestButton = document.getElementById('start-test'); // Correctly defined
+
+        let graph = new Chart(speedGraph, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Download Speed (Mbps)',
+                    borderColor: '#007BFF',
+                    data: [],
+                    fill: false
+                }, {
+                    label: 'Upload Speed (Mbps)',
+                    borderColor: '#FF6347',
+                    data: [],
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        ticks: {
+                            maxTicksLimit: 20
+                        }
+                    }
+                }
+            }
+        });
+
+        function startTest() {
+            startTestButton.disabled = true;
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            if (connection) {
+                // Get the network speed data
+                downloadSpeed = connection.downlink; // Downlink is the download speed in Mbps
+                uploadSpeed = connection.uplink || 1; // Uplink is the upload speed in Mbps (fallback to 1 if not available)
+
+                downloadSpeedDisplay.textContent = downloadSpeed.toFixed(2) + " Mbps";
+                uploadSpeedDisplay.textContent = uploadSpeed.toFixed(2) + " Mbps";
+                speedData.download.push(downloadSpeed);
+                speedData.upload.push(uploadSpeed);
+                updateGraph();
+            } else {
+                alert('Network information not available on your browser.');
+            }
+            
+            startTestButton.disabled = false;
+        }
+
+        function updateGraph() {
+            if (speedData.download.length > 20) {
+                speedData.download.shift();
+                speedData.upload.shift();
+            }
+
+            graph.data.labels.push(graph.data.labels.length + 1);
+            graph.data.datasets[0].data = speedData.download;
+            graph.data.datasets[1].data = speedData.upload;
+
+            graph.update();
+        }
+
+        function exportData() {
+            let csvData = "Time,Download Speed (Mbps),Upload Speed (Mbps)\n";
+            
+            speedData.download.forEach((download, index) => {
+                csvData += `${index + 1},${download},${speedData.upload[index]}\n`;
+            });
+
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'network_speed_data.csv';
+            link.click();
+        }
+    </script>
+</body>
+</html>

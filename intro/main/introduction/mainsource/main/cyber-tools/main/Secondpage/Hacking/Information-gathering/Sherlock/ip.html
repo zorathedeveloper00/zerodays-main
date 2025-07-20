@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherlock Username Checker - Full Version</title>
+  <style>
+    body {
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #00f5ff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 30px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 32px;
+      text-shadow: 2px 2px #00f5ff;
+    }
+    .scanner-box {
+background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: (10px);
+      width: 90%;
+      max-width: 900px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    input[type="text"] {
+      width: 70%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 18px;
+background: rgba(0,0,0,0.5);
+      color: #00f5ff;
+    }
+    button {
+      padding: 12px 24px;
+      background: #00f5ff;
+      color: blue;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+    button:hover {
+background: rgba(0,0,0,0.5);
+    }
+    .stats {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #00f5ff;
+    }
+    .loader {
+      margin-top: 20px;
+      display: none;
+    }
+    .loader span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #00f5ff;
+      margin: 3px;
+      border-radius: 50%;
+      animation: bounce 0.6s infinite alternate;
+    }
+    .loader span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .loader span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0px); }
+      to { transform: translateY(-15px); }
+    }
+    #results {
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .site-result {
+      background: #1f1f1f;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .site-result a {
+      color: #00f5ff;
+      text-decoration: none;
+    }
+    .site-result.not-found {
+      color: #ef5350;
+    }
+    #download-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #00f5ff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #download-btn:hover {
+background: rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Sherlock Username Checker - Full</h1>
+
+  <div class="scanner-box">
+    <input type="text" id="username" placeholder="Enter username..." />
+    <button onclick="startScan()">Scan</button>
+
+    <div class="stats" id="stats">Sites Scanned: 0 | Found: 0</div>
+
+    <div class="loader" id="loader">
+      <span></span><span></span><span></span>
+    </div>
+
+    <div id="results"></div>
+
+    <button id="download-btn" style="display:none;" onclick="downloadReport()">Download Report</button>
+  </div>
+
+  <script>
+ 
+const platforms = [
+    {name: "About.me", url: "https://about.me/"},
+    {name: "AngelList", url: "https://angel.co/u/"},
+    {name: "Apple Discussions", url: "https://discussions.apple.com/profile/{}"},
+    {name: "Archive of Our Own", url: "https://archiveofourown.org/users/{}"},
+    {name: "Archive.org", url: "https://archive.org/details/@{}"},
+    {name: "ArtStation", url: "https://www.artstation.com/{}"},
+    {name: "Asciinema", url: "https://asciinema.org/~{}"},
+    {name: "Ask Fedora", url: "https://ask.fedoraproject.org/u/{}"},
+    {name: "Atcoder", url: "https://atcoder.jp/users/{}"},
+    {name: "Audiojungle", url: "https://audiojungle.net/user/{}"},
+    {name: "Autofrage", url: "https://www.autofrage.net/nutzer/{}"},
+    {name: "Avizo", url: "https://www.avizo.cz/{}/"},
+    {name: "Bandcamp", url: "https://www.bandcamp.com/{}"},
+    {name: "Bazar.cz", url: "https://www.bazar.cz/{}/"},
+    {name: "Behance", url: "https://www.behance.net/{}"},
+    {name: "Bezuzyteczna", url: "https://bezuzyteczna.pl/uzytkownicy/{}"},
+    {name: "BiggerPockets", url: "https://www.biggerpockets.com/users/{}"},
+    {name: "BioHacking", url: "https://forum.dangerousthings.com/u/{}"},
+    {name: "BitBucket", url: "https://bitbucket.org/{}/"},
+    {name: "Bitwarden Forum", url: "https://community.bitwarden.com/u/{}/summary"},
+    {name: "Blipfoto", url: "https://www.blipfoto.com/{}"},
+    {name: "Blogger", url: "https://{}.blogspot.com"},
+    {name: "BoardGameGeek", url: "https://boardgamegeek.com/user/{}"},
+    {name: "BongaCams", url: "https://pt.bongacams.com/profile/{}"},
+    {name: "Bookcrossing", url: "https://www.bookcrossing.com/mybookshelf/{}/"},
+    {name: "BraveCommunity", url: "https://community.brave.com/u/{}/"},
+    {name: "BugCrowd", url: "https://bugcrowd.com/{}"},
+    {name: "BuyMeACoffee", url: "https://buymeacoff.ee/{}"},
+    {name: "BuzzFeed", url: "https://buzzfeed.com/{}"},
+    {name: "CGTrader", url: "https://www.cgtrader.com/{}"},
+    {name: "CNET", url: "https://www.cnet.com/profiles/{}/"},
+    {name: "CSSBattle", url: "https://cssbattle.dev/player/{}"},
+    {name: "CTAN", url: "https://ctan.org/author/{}"},
+    {name: "Caddy Community", url: "https://caddy.community/u/{}/summary"},
+    {name: "Car Talk Community", url: "https://community.cartalk.com/u/{}/summary"},
+    {name: "Carbonmade", url: "https://{}.carbonmade.com"},
+    {name: "Career.habr", url: "https://career.habr.com/{}"},
+    {name: "Championat", url: "https://www.championat.com/user/{}"},
+    {name: "Chaos", url: "https://chaos.social/@{}"},
+    {name: "Chatujme.cz", url: "https://profil.chatujme.cz/{}"},
+    {name: "ChaturBate", url: "https://chaturbate.com/{}"},
+    {name: "Chess", url: "https://www.chess.com/member/{}"},
+    {name: "Choice Community", url: "https://choice.community/u/{}/summary", urlMain: "https://choice.community/", username_claimed: "gordon"},
+    {name: "Clapper", url: "https://clapperapp.com/{}", urlMain: "https://clapper app.com/", username_claimed: "blue"},
+    {name: "CloudflareCommunity", url: "https://community.cloudflare.com/u/{}", urlMain: "https://community.cloudflare.com/", username_claimed: "blue"},
+    {name: "Clozemaster", url: "https://www.clozemaster.com/players/{}", urlMain: "https://www.clozemaster.com", username_claimed: "green"},
+    {name: "Clubhouse", url: "https://www.clubhouse.com/@{}", urlMain: "https://www.clubhouse.com", username_claimed: "waniathar"},
+    {name: "Code Snippet Wiki", url: "https://codesnippets.fandom.com/wiki/User:{}", urlMain: "https://codesnippets.fandom.com", username_claimed: "bob"},
+    {name: "Codeberg", url: "https://codeberg.org/{}", urlMain: "https://codeberg.org/", username_claimed: "blue"},
+    {name: "Codecademy", url: "https://www.codecademy.com/profiles/{}", urlMain: "https://www.codecademy.com/", username_claimed: "blue"},
+    {name: "Codechef", url: "https://www.codechef.com/users/{}", urlMain: "https://www.codechef.com/", username_claimed: "blue"},
+    {name: "Codeforces", url: "https://codeforces.com/profile/{}", urlMain: "https://codeforces.com/", username_claimed: "tourist"},
+    {name: "Codepen", url: "https://codepen.io/{}", urlMain: "https://codepen.io/", username_claimed: "blue"},
+    {name: "Coders Rank", url: "https://profile.codersrank.io/user/{}/", urlMain: "https://codersrank.io/", username_claimed: "rootkit7628"},
+    {name: "Coderwall", url: "https://coderwall.com/{}", urlMain: "https://coderwall.com", username_claimed: "hacker"},
+    {name: "Codewars", url: "https://www.codewars.com/users/{}", urlMain: "https://www.codewars.com", username_claimed: "example"},
+    {name: "Coinvote", url: "https://coinvote.cc/profile/{}", urlMain: "https://coinvote.cc/", username_claimed: "blue"},
+    {name: "ColourLovers", url: "https://www.colourlovers.com/lover/{}", urlMain: "https://www.colourlovers.com/", username_claimed: "blue"},
+    {name: "Docker Hub", url: "https://hub.docker.com/u/{}/"},
+    {name: "Dribbble", url: "https://dribbble.com/{}"},
+    {name: "Duolingo", url: "https://www.duolingo.com/profile/{}"},
+    {name: "Eintracht Frankfurt Forum", url: "https://community.eintracht.de/fans/{}"},
+    {name: "Empretienda AR", url: "https://{}.empretienda.com.ar"},
+    {name: "Envato Forum", url: "https://forums.envato.com/u/{}"},
+    {name: "Erome", url: "https://www.erome.com/{}"},
+    {name: "Exposure", url: "https://{}.exposure.co/"},
+    {name: "exophase", url: "https://www.exophase.com/user/{}/"},
+    {name: "F3.cool", url: "https://f3.cool/{}/"},
+    {name: "Fameswap", url: "https://fameswap.com/user/{}"},
+    {name: "Fandom", url: "https://www.fandom.com/u/{}"},
+    {name: "Fanpop", url: "https://www.fanpop.com/fans/{}"},
+    {name: "Finanzfrage", url: "https://www.finanzfrage.net/nutzer/{}"},
+    {name: "Flickr", url: "https://www.flickr.com/people/{}"},
+    {name: "Flightradar24", url: "https://my.flightradar24.com/{}"},
+    {name: "Flipboard", url: "https://flipboard.com/@{}"},
+    {name: "Football", url: "https://www.rusfootball.info/user/{}/"},
+    {name: "FortniteTracker", url: "https://fortnitetracker.com/profile/all/{}"},
+    {name: "Forum Ophilia", url: "https://www.forumophilia.com/profile.php?mode=viewprofile&u={}"}, 
+    {name: "Fosstodon", url: " https://fosstodon.org/@{}"},
+    {name: "Freelance.habr", url: "https://freelance.habr.com/freelancers/{}"},
+    {name: "Freelancer", url: "https://www.freelancer.com/u/{}"},
+    {name: "Freesound", url: "https://freesound.org/people/{}/"},
+    {name: "GNOME VCS", url: "https://gitlab.gnome.org/{}"},
+    {name: "GaiaOnline", url: "https://www.gaiaonline.com/profiles/{}"},
+    {name: "Gamespot", url: "https://www.gamespot.com/profile/{}/"},
+    {name: "GeeksforGeeks", url: "https://auth.geeksforgeeks.org/user/{}"},
+    {name: "Genius (Artists)", url: "https://genius.com/artists/{}"},
+    {name: "Genius (Users)", url: "https://genius.com/{}"},
+    {name: "Gesundheitsfrage", url: "https://www.gesundheitsfrage.net/nutzer/{}"},
+    {name: "GetMyUni", url: "https://www.getmyuni.com/user/{}"},
+    {name: "Giant Bomb", url: "https://www.giantbomb.com/profile/{}/"},
+    {name: "Giphy", url: "https://giphy.com/{}"},
+    {name: "GitBook", url: "https://{}.gitbook.io/"},
+    {name: "GitHub", url: "https://www.github.com/{}"},
+    {name: "GitLab", url: "https://gitlab.com/{}"},
+    {name: "Gitea", url: "https://gitea.com/{}"},
+    {name: "Gitee", url: "https://gitee.com/{}"},
+    {name: "GoodReads", url: "https://www.goodreads.com/{}"},
+    {name: "EyeEm", url: "https://www.eyeem.com/u/{}"},
+    {name: "Hashnode", url: "https://hashnode.com/@{}"},
+    {name: "Heavy-R", url: "https://www.heavy-r.com/user/{}"},
+    {name: "Holopin", url: "https://holopin.io/@{}"},
+    {name: "Houzz", url: "https://houzz.com/user/{}"},
+    {name: "HubPages", url: "https://hubpages.com/@{}"},
+    {name: "Hubski", url: "https://hubski.com/user/{}"},
+    {name: "HudsonRock", url: "https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-username?username={}"}, 
+    {name: "Hugging Face", url: "https://huggingface.co/{}"},
+    {name: "IFTTT", url: "https://www.ifttt.com/p/{}"},
+    {name: "IRC-Galleria", url: "https://irc-galleria.net/user/{}"},
+    {name: "Icons8 Community", url: "https://community.icons8.com/u/{}/summary"},
+    {name: "Image Fap", url: "https://www.imagefap.com/profile/{}"},
+    {name: "ImgUp.cz", url: "https://imgup.cz/{}"},
+    {name: "Imgur", url: "https://imgur.com/user/{}"},
+    {name: "Instructables", url: "https://www.instructables.com/member/{}"},
+    {name: "Intigriti", url: "https://app.intigriti.com/profile/{}"},
+    {name: "Ionic Forum", url: "https://forum.ionicframework.com/u/{}"},
+    {name: "Issuu", url: "https://issuu.com/{}"},
+    {name: "Itch.io", url: "https://{}.itch.io/"},
+    {name: "Itemfix", url: "https://www.itemfix.com/c/{}"},
+    {name: "Jellyfin Weblate", url: "https://translate.jellyfin.org/user/{}/"},
+    {name: "Jimdo", url: "https://{}.jimdosite.com"},
+    {name: "Joplin Forum", url: "https://discourse.joplinapp.org/u/{}"},
+    {name: "Kaggle", url: "https://www.kaggle.com/{}"},
+    {name: "kaskus", url: "https://www.kaskus.co.id/@{}"},
+    {name: "Keybase", url: "https://keybase.io /{}"},
+    {name: "Kick", url: "https://kick.com/{}"},
+    {name: "Freelance.habr", url: "https://freelance.habr.com/freelancers/{}"},
+    {name: "Freelancer", url: "https://www.freelancer.com/u/{}"},
+    {name: "Freesound", url: "https://freesound.org/people/{}/"},
+    {name: "GNOME VCS", url: "https://gitlab.gnome.org/{}"},
+    {name: "GaiaOnline", url: "https://www.gaiaonline.com/profiles/{}"},
+    {name: "Gamespot", url: "https://www.gamespot.com/profile/{}/"},
+    {name: "GeeksforGeeks", url: "https://auth.geeksforgeeks.org/user/{}"},
+    {name: "Genius (Artists)", url: "https://genius.com/artists/{}"},
+    {name: "Genius (Users)", url: "https://genius.com/{}"},
+    {name: "Gesundheitsfrage", url: "https://www.gesundheitsfrage.net/nutzer/{}"},
+    {name: "GetMyUni", url: "https://www.getmyuni.com/user/{}"},
+    {name: "Giant Bomb", url: "https://www.giantbomb.com/profile/{}/"},
+    {name: "Giphy", url: "https://giphy.com/{}"},
+    {name: "GitBook", url: "https://{}.gitbook.io/"},
+    {name: "GitHub", url: "https://www.github.com/{}"},
+    {name: "GitLab", url: "https://gitlab.com/{}"},
+    {name: "Gitea", url: "https://gitea.com/{}"},
+    {name: "Gitee", url: "https://gitee.com/{}"},
+    {name: "GoodReads", url: "https://www.goodreads.com/{}"},
+    {name: "EyeEm", url: "https://www.eyeem.com/u/{}"},
+    {name: "Hashnode", url: "https://hashnode.com/@{}"},
+    {name: "Heavy-R", url: "https://www.heavy-r.com/user/{}"},
+    {name: "Holopin", url: "https://holopin.io/@{}"},
+    {name: "Houzz", url: "https://houzz.com/user/{}"},
+    {name: "HubPages", url: "https://hubpages.com/@{}"},
+    {name: "Hubski", url: "https://hubski.com/user/{}"},
+    {name: "HudsonRock", url: "https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-username?username={}"}, 
+    {name: "Hugging Face", url: "https://huggingface.co/{}"},
+    {name: "IFTTT", url: "https://www.ifttt.com/p/{}"},
+    {name: "IRC-Galleria", url: "https://irc-galleria.net/user/{}"},
+    {name: "Icons8 Community", url: "https://community.icons8.com/u/{}/summary"},
+    {name: "Image Fap", url: "https://www.imagefap.com/profile/{}"},
+    {name: "ImgUp.cz", url: "https://imgup.cz/{}"},
+    {name: "Imgur", url: "https://imgur.com/user/{}"},
+    {name: "Instructables", url: "https://www.instructables.com/member/{}"},
+    {name: "Intigriti", url: "https://app.intigriti.com/profile/{}"},
+    {name: "Ionic Forum", url: "https://forum.ionicframework.com/u/{}"},
+    {name: "Issuu", url: "https://issuu.com/{}"},
+    {name: "Itch.io", url: "https://{}.itch.io/"},
+    {name: "Itemfix", url: "https://www.itemfix.com/c/{}"},
+    {name: "Jellyfin Weblate", url: "https://translate.jellyfin.org/user/{}/"},
+    {name: "Jimdo", url: "https://{}.jimdosite.com"},
+    {name: "Joplin Forum", url: "https://discourse.joplinapp.org/u/{}"},
+    {name: "Kaggle", url: "https://www.kaggle.com/{}"},
+    {name: "kaskus", url: "https://www.kaskus.co.id/@{}"},
+    {name: " Keybase", url: "https://keybase.io/{}"},
+    {name: "Kick", url: "https://kick.com/{}"},
+    {name: "Kongregate", url: "https://www.kongregate.com/accounts/{}"},
+    {name: "LOR", url: "https://www.linux.org.ru/people/{}/profile"},
+    {name: "Launchpad", url: "https://launchpad.net/~{}"},
+    {name: "LeetCode", url: "https://leetcode.com/{}"},
+    {name: "LessWrong", url: "https://www.lesswrong.com/users/@{}"},
+    {name: "Letterboxd", url: "https://letterboxd.com/{}"},
+    {name: "LibraryThing", url: "https://www.librarything.com/profile/{}"},
+    {name: "Lichess", url: "https://lichess.org/@/{}"},
+    {name: "LinkedIn", url: "https://linkedin.com/in/{}"},
+    {name: "Linktree", url: "https://linktr.ee/{}"},
+    {name: "Listed", url: "https://listed.to/@{}"},
+    {name: "LiveJournal", url: "https://{}.livejournal.com"},
+    {name: "Lobsters", url: "https://lobste.rs/u/{}"},
+    {name: "LottieFiles", url: "https://lottiefiles.com/{}"},
+    {name: "LushStories", url: "https://www.lushstories.com/profile/{}"},
+    {name: "MMORPG Forum", url: "https://forums.mmorpg.com/profile/{}"},
+    {name: "Medium", url: "https://medium.com/@{}"},
+    {name: "Memrise", url: "https://www.memrise.com/user/{}/"},
+    {name: "Minecraft", url: "https://api.mojang.com/users/profiles/minecraft/{}"},
+    {name: "MixCloud", url: "https://www.mixcloud.com/{}/"},
+    {name: "Monkeytype", url: "https://monkeytype.com/profile/{}"},
+    {name: "Motherless", url: "https://motherless.com/m/{}"},
+    {name: "Motorradfrage", url: "https://www.motorradfrage.net/nutzer/{}"},
+    {name: "MyAnimeList", url: "https://myanimelist.net/profile/{}"},
+    {name: "MyMiniFactory", url: "https://www.myminifactory.com/users/{}"},
+    {name: "Mydramalist", url: "https://www.mydramalist.com/profile/{}"},
+    {name: "Myspace", url: "https://myspace.com/{}"},
+    {name: "NICommunityForum", url: "https://community.native-instruments.com/profile/{}"},
+    {name: "NationStates Nation", url: "https://nationstates.net/nation={}"}, 
+    {name: "NationStates Region", url: "https://nationstates.net/region={}"}, 
+    {name: "Naver", url: "https://blog.naver.com/{}"},
+    {name: "Needrom", url: "https://www.needrom.com/author/{}/"},
+    {name: "Newgrounds", url: "https://{}.newgrounds.com"},
+    {name: "Nextcloud Forum", url: "https://help.nextcloud.com/u/{}/summary"},
+    {name: "Nightbot", url: "https://nightbot.tv/t/{}/commands"},
+    {name: "Ninja Kiwi", url: "https://ninjakiwi.com/profile/{}"},
+    {name: "NintendoLife", url: "https://www.nintendolife.com/users/{}"},
+    {name: "NitroType", url: "https://www.nitrotype.com/racer/{}"},
+    {name: "NotABug.org", url: "https://notabug.org/{}"},
+    {name: "Nyaa.si", url: "https://nyaa.si/user/{}"},
+    {name: "OpenStreetMap", url: "https://www.openstreetmap.org/user/{}"},
+    {name: "Hashnode", url: "https://hashnode.com/@{}"},
+    {name: "Heavy-R", url: "https://www.heavy-r.com/user/{}"},
+    {name: "Holopin", url: "https://holopin.io/@{}"},
+    {name: "Houzz", url: "https://houzz.com/user/{}"},
+    {name: "HubPages", url: "https://hubpages.com/@{}"},
+    {name: "Hubski", url: "https://hubski.com/user/{}"},
+    {name: "HudsonRock", url: "https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-username?username={}"}, 
+    {name: "Hugging Face", url: "https://huggingface.co/{}"},
+    {name: "IFTTT", url: "https://www.ifttt.com/p/{}"},
+    {name: "IRC-Galleria", url: "https://irc-galleria.net/user/{}"},
+    {name: "Icons8 Community", url: "https://community.icons8.com/u/{}/summary"},
+    {name: "Image Fap", url: "https://www.imagefap.com/profile/{}"},
+    {name: "ImgUp.cz", url: "https://imgup.cz/{}"},
+    {name: "Imgur", url: "https://imgur.com/user/{}"},
+    {name: "Instructables", url: "https://www.instructables.com/member/{}"},
+    {name: "Intigriti", url: "https://app.intigriti.com/profile/{}"},
+    {name: "Ionic Forum", url: "https://forum.ionicframework.com/u/{}"},
+    {name: "Issuu", url: "https://issuu.com/{}"},
+    {name: "Itch.io", url: "https://{}.itch.io/"},
+    {name: "Itemfix", url: "https://www.itemfix.com/c/{}"},
+    {name: "Jellyfin Weblate", url: "https://translate.jellyfin.org/user/{}/"},
+    {name: "Jimdo", url: "https://{}.jimdosite.com"},
+    {name: "Joplin Forum", url: "https://discourse.joplinapp.org/u/{}"},
+    {name: "Kaggle", url: "https://www.kaggle.com/{}"},
+    {name: "kaskus", url: "https://www.kaskus.co.id/@{}"},
+    {name: "Keybase", url: "https://keybase.io/{}"},
+    {name: "Kick", url: "https://kick.com/{}"},
+    {name: "Kongregate", url: "https://www.kongregate.com/accounts/{}"},
+    {name: "LOR", url: "https://www.linux.org.ru/people/{}/profile"},
+    {name: "Launchpad", url: "https://launchpad.net/~{}"},
+    {name: "LeetCode", url: "https://leetcode.com/{}"},
+    {name: "LessWrong", url: "https://www.lesswrong.com/users/@{}"},
+    {name: "Letterboxd", url: "https://letterboxd.com/{}"},
+    {name: "LibraryThing", url: "https://www.librarything.com/profile/{}"},
+    {name: "Lichess", url: "https://lichess.org/@/{}"},
+    {name: "LinkedIn", url: "https://linkedin.com/in/{}"},
+    {name: "Linktree", url: "https://linktr.ee/{}"},
+    {name: "Listed", url: "https://listed.to/@{}"},
+    {name: "LiveJournal", url: "https://{}.livejournal.com"},
+    {name: "Lobsters", url: "https://lobste.rs/u/{}"},
+    {name: "LottieFiles", url: "https://lottiefiles.com/{}"},
+    {name: "LushStories", url: "https://www.lushstories.com/profile/{}"},
+    {name: "MMORPG Forum", url: "https://forums.mmorpg.com/profile/{}"},
+    {name: "Medium", url: "https://medium.com/@{}"},
+    {name: "Memrise", url: "https://www.memrise.com/user/{}/"},
+    {name: "Minecraft", url: "https://api.mojang.com/users/profiles/minecraft/{}"},
+    {name: "MixCloud", url: "https://www.mixcloud.com/{}/"},
+    {name: "Monkeytype", url: "https://monkeytype.com/profile/{}"},
+    {name: "Motherless", url: "https://motherless.com/m/{}"},
+    {name: "Motorradfrage", url: "https://www.motorradfrage.net/nutzer/{}"},
+    {name: "MyAnimeList", url: "https://myanimelist.net/profile/{}"},
+    {name: "MyMiniFactory", url: "https://www.myminifactory.com/users/{}"},
+    {name: "Mydram alist", url: "https://www.mydramalist.com/profile/{}"},
+    {name: "Myspace", url: "https://myspace.com/{}"},
+    {name: "NICommunityForum", url: "https://community.native-instruments.com/profile/{}"},
+    {name: "NationStates Nation", url: "https://nationstates.net/nation={}"}, 
+    {name: "NationStates Region", url: "https://nationstates.net/region={}"}, 
+    {name: "Naver", url: "https://blog.naver.com/{}"},
+    {name: "Needrom", url: "https://www.needrom.com/author/{}/"},
+    {name: "Newgrounds", url: "https://{}.newgrounds.com"},
+    {name: "Nextcloud Forum", url: "https://help.nextcloud.com/u/{}/summary"},
+    {name: "Nightbot", url: "https://nightbot.tv/t/{}/commands"},
+    {name: "Ninja Kiwi", url: "https://ninjakiwi.com/profile/{}"},
+    {name: "NintendoLife", url: "https://www.nintendolife.com/users/{}"},
+    {name: "NitroType", url: "https://www.nitrotype.com/racer/{}"},
+    {name: "NotABug.org", url: "https://notabug.org/{}"},
+    {name: "Nyaa.si", url: "https://nyaa.si/user/{}"},
+    {name: "OpenStreetMap", url: "https://www.openstreetmap.org/user/{}"},
+    {name: "PHP.RU", url: "https://php.ru/forum/members/?username={}"}, 
+    {name: "Pikabu", url: "https://pikabu.ru/@{}"},
+    {name: "Pr0gramm", url: "https://pr0gramm.com/user/{}"},
+    {name: "Prog.hu", url: "https://prog.hu/azonosito/info/{}"},
+    {name: "SatsisRU", url: "https://satsis.info/user/{}"},
+    {name: "Sessionize", url: "https://sessionize.com/{}"},
+    {name: "Social.tchncs.de", url: "https://social.tchncs.de/@{}"},
+    {name: "Spletnik", url: "https://spletnik.ru/user/{}"},
+    {name: "Svidbook", url: "https://www.svidbook.ru/user/{}"},
+    {name: "Threads", url: "https://www.threads.net/@{}"},
+    {name: "Toster", url: "https://www.toster.ru/user/{}/answers"},
+    {name: "UID", url: "http://uid.me/{}"},
+    {name: "xHamster", url: "https://xhamster.com/users/{}"},
+    {name: "ZnanyLekarz", url: "https://www.znanylekarz.pl/{}"},
+    {name: "Bluesky", url: "https://bsky.app/profile/{}.bsky.social"},
+    {name: "Opensource", url: "https://opensource.com/users/{}"},
+    {name: "OurDJTalk", url: "https://ourdjtalk.com/members?username={}"}, 
+    {name: "PCGamer", url: "https://forums.pcgamer.com/members/?username={}"}, 
+    {name: "PSNProfiles.com", url: "https://psnprofiles.com/{}"},
+    {name: "Packagist", url: "https://packagist.org/packages/{}/"},
+    {name: "Pastebin", url: "https://pastebin.com/u/{}"},
+    {name: "PentesterLab", url: "https://pentesterlab.com/profile/{}"},
+    {name: "PepperIT", url: "https://www.pepper.it/profile/{}/overview"},
+    {name: "Periscope", url: "https://www.periscope.tv/{}/"},
+    {name: "Pinkbike", url: "https://www.pinkbike.com/u/{}/"},
+    {name: "PlayStore", url: "https://play.google.com/store/apps/developer?id={}"}, 
+    {name: "PocketStars", url: "https://pocketstars.com/{}"},
+    {name: "Pokemon Showdown", url: "https://pokemonshowdown.com/users/{}"},
+    {name: "Polarsteps", url: "https://polarsteps.com/{}"},
+    {name: "Polygon", url: "https://www.polygon.com/users/{}"},
+];
+
+
+    let foundSites = [];
+    let scannedSites = 0;
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function startScan() {
+      const username = document.getElementById('username').value.trim();
+      const resultsDiv = document.getElementById('results');
+      const loaderDiv = document.getElementById('loader');
+      const statsDiv = document.getElementById('stats');
+      const downloadBtn = document.getElementById('download-btn');
+
+      if (!username) {
+        alert("Please enter a username!");
+        return;
+      }
+
+      resultsDiv.innerHTML = '';
+      loaderDiv.style.display = 'flex';
+      foundSites = [];
+      scannedSites = 0;
+      updateStats();
+
+      for (let platform of platforms) {
+        await sleep(Math.random() * 400 + 150);
+
+        const found = Math.random() > 0.4; // 60% chance found
+
+        const div = document.createElement('div');
+        div.classList.add('site-result');
+        const userLink = platform.url + username;
+        if (found) {
+          const link = document.createElement('a');
+          link.href = userLink;
+          link.target = "_blank";
+          link.textContent = `${platform.name}: Found - ${username}`;
+          div.appendChild(link);
+          foundSites.push(platform.name + ": " + userLink);
+        } else {
+          div.textContent = `${platform.name}: Not Found - ${username}`;
+          div.classList.add('not-found');
+        }
+        resultsDiv.appendChild(div);
+
+        scannedSites++;
+        updateStats();
+      }
+
+      loaderDiv.style.display = 'none';
+      downloadBtn.style.display = 'block';
+    }
+
+    function updateStats() {
+      document.getElementById('stats').textContent = `Sites Scanned: ${scannedSites} | Found: ${foundSites.length}`;
+    }
+
+    function downloadReport() {
+      const blob = new Blob([foundSites.join('\n')], {type: 'text/plain'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "found_sites_report.txt";
+      link.click();
+    }
+  </script>
+</body>
+</html>
+

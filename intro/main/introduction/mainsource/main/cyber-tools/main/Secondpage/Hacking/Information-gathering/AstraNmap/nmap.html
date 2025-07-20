@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZeroDay AstraNmap Scanner</title>
+  <style>
+    body {
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      font-family: 'Courier New', monospace;
+      color: #00f5ff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h1 {
+      color: #00f5ff;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .terminal {
+background: rgba(0,0,0,0.5);
+      border: 2px solid #00f5ff;
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 850px;
+    }
+
+    .form label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .form input, .form select, .form button {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #00f5ff;
+background: rgba(0,0,0,0.5);
+      color: #00f5ff;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+
+    .form button {
+      background-color: #00f5ff;
+      color: #00f;
+      font-weight: bold;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+
+    .form button:hover {
+background: rgba(0,0,0,0.5);
+    }
+
+    .output {
+background: rgba(0,0,0,0.5);
+      margin-top: 20px;
+      padding: 15px;
+      height: 350px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 0.95em;
+      border-radius: 5px;
+    }
+
+    .control-buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .control-buttons button {
+      flex: 1;
+    }
+
+    footer {
+      margin-top: 30px;
+      color: #00f5ff;
+      font-size: 0.8em;
+    }
+
+    footer a {
+      color: #00f5ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>ZeroDay AstraNmap Scanner</h1>
+  <div class="terminal">
+    <div class="form">
+      <label for="target">Target IP / Domain:</label>
+      <input id="target" type="text" placeholder="e.g. 192.168.1.1 or example.com" />
+
+      <label for="ports">Custom Ports (comma, dash, or 'all'):</label>
+      <input id="ports" type="text" placeholder="e.g. 22,80,443 or 1-100 or all"/>
+
+      <label for="scanType">Scan Type:</label>
+      <select id="scanType">
+        <option value="-sS">TCP SYN Scan (Stealth)</option>
+        <option value="-sV">Service Version Detection</option>
+        <option value="-O">OS Detection</option>
+        <option value="-A">Aggressive Scan</option>
+        <option value="-PN">No Ping Scan</option>
+        <option value="-sU">UDP Scan</option>
+        <option value="-T4">Fast Scan</option>
+        <option value="-T4 -A -v -Pn">Intense All-in-One</option>
+      </select>
+
+      <button id="runBtn" onclick="simulateScan()">Run Nmap Scan</button>
+
+      <div class="control-buttons">
+        <button id="stopBtn" onclick="stopScan()" style="display:none;">Stop</button>
+        <button id="resetBtn" onclick="resetScan()" style="display:none;">Reset</button>
+        <button id="saveTxtBtn" onclick="saveAsTxt()" style="display:none;">Save as .TXT</button>
+        <button id="savePdfBtn" onclick="saveAsPDF()" style="display:none;">Save as .PDF</button>
+      </div>
+    </div>
+    <div class="output" id="output">[+] Ready to scan...</div>
+  </div>
+
+  <footer>
+    For educational and ethical penetration testing only. &copy; 2025 BlackHoleSec | GitHub:
+    <a href="https://github.com/Gameye98" target="_blank">Gameye98</a>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    let scanning = false;
+    let scanTimer;
+
+    function simulateScan() {
+      if (scanning) return;
+      scanning = true;
+      const output = document.getElementById('output');
+      const target = document.getElementById('target').value.trim() || "127.0.0.1";
+      const portInput = document.getElementById('ports').value.trim();
+      const scanType = document.getElementById('scanType').value;
+
+      document.getElementById('runBtn').disabled = true;
+      document.getElementById('stopBtn').style.display = "inline-block";
+
+      let ports = [];
+      if (portInput.toLowerCase() === "all") {
+        for (let i = 1; i <= 65535; i++) ports.push(i);
+      } else if (portInput.includes('-')) {
+        const [start, end] = portInput.split('-').map(Number);
+        if (start >= 1 && end <= 65535 && start <= end) {
+          for (let i = start; i <= end; i++) ports.push(i);
+        } else {
+          output.textContent += `\nInvalid port range: ${portInput}\n`;
+          resetScan();
+          return;
+        }
+      } else if (portInput.includes(',')) {
+        ports = portInput.split(',').map(p => {
+          const port = parseInt(p.trim());
+          return (port >= 1 && port <= 65535) ? port : null;
+        }).filter(p => p !== null);
+      } else {
+        const port = parseInt(portInput);
+        if (port >= 1 && port <= 65535) {
+          ports = [port];
+        } else {
+          output.textContent += `\nInvalid port: ${portInput}\n`;
+          resetScan();
+          return;
+        }
+      }
+
+      output.textContent = `Nmap scan report for ${target}\nHost is up (0.${Math.floor(Math.random() * 100)}s latency).\n\nStarting Nmap ${scanType}...\n`;
+
+      let index = 0;
+      const batchSize = 100;
+
+      function processBatch() {
+        if (!scanning) return;
+
+        const slice = ports.slice(index, index + batchSize);
+        slice.forEach(port => {
+          const status = Math.random() > 0.98 ? "open" : (Math.random() > 0.5 ? "closed" : "filtered");
+          const service = guessService(port);
+          const version = (scanType.includes("-sV") || scanType.includes("-A")) && status === "open"
+            ? ` ${service}/${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
+            : "";
+          const fingerprint = getFingerprint(port, status);
+          output.textContent += `${port}/tcp   ${status}   ${service}${version}   Fingerprint: ${fingerprint}\n`;
+        });
+
+        index += batchSize;
+        output.scrollTop = output.scrollHeight;
+
+        if (index < ports.length) {
+          scanTimer = setTimeout(processBatch, 50);
+        } else {
+          if (scanType.includes("-O") || scanType.includes("-A")) {
+            output.textContent += `\nOS details: ${getRandomOS()}\n`;
+          }
+          if (scanType.includes("-sV") || scanType.includes("-A")) {
+            output.textContent += `\nService Info: Host: ${target}; OS: ${getRandomOS(true)}; CPE: cpe:/o:${getCPE()}\n`;
+          }
+          output.textContent += `\nScan completed at ${new Date().toLocaleTimeString()}\n`;
+          scanning = false;
+          document.getElementById('stopBtn').style.display = "none";
+          document.getElementById('resetBtn').style.display = "inline-block";
+          document.getElementById('saveTxtBtn').style.display = "inline-block";
+          document.getElementById('savePdfBtn').style.display = "inline-block";
+        }
+      }
+
+      processBatch();
+    }
+
+    function stopScan() {
+      clearTimeout(scanTimer);
+      scanning = false;
+      document.getElementById('stopBtn').style.display = "none";
+      document.getElementById('resetBtn').style.display = "inline-block";
+      document.getElementById('saveTxtBtn').style.display = "inline-block";
+      document.getElementById('savePdfBtn').style.display = "inline-block";
+    }
+
+    function resetScan() {
+      document.getElementById('output').textContent = '[+] Ready to scan...';
+      document.getElementById('runBtn').disabled = false;
+      document.getElementById('resetBtn').style.display = "none";
+      document.getElementById('saveTxtBtn').style.display = "none";
+      document.getElementById('savePdfBtn').style.display = "none";
+    }
+
+    function saveAsTxt() {
+      const blob = new Blob([document.getElementById('output').textContent], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'scan_report.txt';
+      link.click();
+    }
+
+    function saveAsPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const lines = document.getElementById('output').textContent.split('\n');
+      let y = 10;
+      doc.setFont("Courier", "normal");
+      lines.forEach(line => {
+        if (y > 280) {
+          doc.addPage();
+          y = 10;
+        }
+        doc.text(line, 10, y);
+        y += 7;
+      });
+      doc.save("scan_report.pdf");
+    }
+
+    function guessService(port) {
+      const services = {
+        21: "ftp", 22: "ssh", 23: "telnet", 25: "smtp", 53: "dns",
+        80: "http", 110: "pop3", 143: "imap", 443: "https", 3306: "mysql",
+        3389: "rdp", 8080: "http-proxy"
+      };
+      return services[port] || `unknown service on port ${port}`;
+    }
+
+    function getFingerprint(port, status) {
+      if (status !== "open") return "N/A";
+      const fp = ["Apache", "nginx", "OpenSSH", "Microsoft-IIS", "ProFTPD", "BIND"];
+      return fp[Math.floor(Math.random() * fp.length)];
+    }
+
+    function getRandomOS(short = false) {
+      const osList = [
+        "Linux 5.4 - 5.10", "Windows 10 Pro", "Ubuntu 22.04 LTS", "macOS Monterey", "Debian 11",
+        "Windows Server 2019", "FreeBSD 13", "Android 11"
+      ];
+      return short ? osList[Math.floor(Math.random() * osList.length)].split(' ')[0] : osList[Math.floor(Math.random() * osList.length)];
+    }
+
+    function getCPE() {
+      const vendors = ["microsoft:windows_10", "canonical:ubuntu", "apple:macos", "linux:kernel"];
+      return vendors[Math.floor(Math.random() * vendors.length)];
+    }
+  </script>
+</body>
+</html>

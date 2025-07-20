@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced Website Footprinting Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body {
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      color: #00f5ff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 { color: #00f5ff; }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+    }
+    input { width: 280px; }
+    button {
+background: rgba(0,0,0,0.5);
+      color: blue;
+      border: none;
+      cursor: pointer;
+    }
+    #results {
+background: rgba(0,0,0,0.5);
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre {
+background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    #map { height: 300px; margin-top: 20px; border-radius: 8px; }
+    .export-buttons {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🌐 Advanced Website Footprinting Tool</h1>
+<input type="text" id="domainInput" placeholder="Enter domain (example.com)">
+<button onclick="footprintWebsite()">Run</button>
+<div class="export-buttons">
+  <button onclick="exportPDF()">Export PDF</button>
+  <button onclick="exportCSV()">Export CSV</button>
+</div>
+<div id="results"></div>
+<div id="map"></div>
+
+<script>
+let fullData = {};
+
+async function footprintWebsite() {
+  const domain = document.getElementById('domainInput').value.trim();
+  if (!domain) return alert("Please enter a domain.");
+  const results = document.getElementById('results');
+  results.innerHTML = `<h3>Scanning ${domain}...</h3>`;
+  fullData = { domain };
+
+  // WHOIS (RDAP)
+  try {
+    const rdap = await fetch(`https://rdap.org/domain/${domain}`).then(r => r.json());
+    results.innerHTML += `<h3>WHOIS (RDAP)</h3><pre>${JSON.stringify(rdap, null, 2)}</pre>`;
+    fullData.rdap = rdap;
+  } catch {
+    results.innerHTML += `<h3>WHOIS</h3><p>Failed</p>`;
+  }
+
+  // DNS
+  try {
+    const dns = await fetch(`https://dns.google/resolve?name=${domain}&type=ANY`).then(r => r.json());
+    results.innerHTML += `<h3>DNS Records</h3><pre>${JSON.stringify(dns.Answer || {}, null, 2)}</pre>`;
+    fullData.dns = dns;
+  } catch {
+    results.innerHTML += `<h3>DNS</h3><p>Failed</p>`;
+  }
+
+  // Headers + Technology Detection
+  try {
+    const res = await fetch(`https://${domain}`, { method: 'HEAD', mode: 'cors' });
+    const headers = {};
+    res.headers.forEach((v, k) => headers[k] = v);
+    fullData.headers = headers;
+    results.innerHTML += `<h3>HTTP Headers</h3><pre>${JSON.stringify(headers, null, 2)}</pre>`;
+
+    // Simple tech detection
+    let techs = [];
+    if (headers['x-powered-by']) techs.push(headers['x-powered-by']);
+    if (headers['server']) techs.push("Server: " + headers['server']);
+    results.innerHTML += `<h3>Technology Detection</h3><pre>${techs.join('\n') || "None detected"}</pre>`;
+    fullData.technology = techs;
+  } catch {
+    results.innerHTML += `<h3>HTTP Headers</h3><p>Failed (CORS Blocked)</p>`;
+  }
+
+  // robots.txt
+  try {
+    const robots = await fetch(`https://${domain}/robots.txt`).then(r => r.text());
+    results.innerHTML += `<h3>robots.txt</h3><pre>${robots}</pre>`;
+    fullData.robots = robots;
+  } catch {
+    results.innerHTML += `<h3>robots.txt</h3><p>Not Found</p>`;
+  }
+
+  // sitemap.xml
+  try {
+    const sitemap = await fetch(`https://${domain}/sitemap.xml`).then(r => r.text());
+    results.innerHTML += `<h3>sitemap.xml</h3><pre>${sitemap}</pre>`;
+    fullData.sitemap = sitemap;
+  } catch {
+    results.innerHTML += `<h3>sitemap.xml</h3><p>Not Found</p>`;
+  }
+
+  // Page Source
+  try {
+    const html = await fetch(`https://${domain}`).then(r => r.text());
+    results.innerHTML += `<h3>Page Source (First 3k chars)</h3><pre>${html.substring(0, 3000)}...</pre>`;
+    fullData.pageSource = html.substring(0, 3000);
+  } catch {
+    results.innerHTML += `<h3>Page Source</h3><p>Failed</p>`;
+  }
+
+  // IP & Geolocation
+  try {
+    const ipRes = await fetch(`https://ipinfo.io/${domain}/json?token=67c480311c9367`).then(r => r.json());
+    results.innerHTML += `<h3>IP Info</h3><pre>${JSON.stringify(ipRes, null, 2)}</pre>`;
+    fullData.ipinfo = ipRes;
+
+    if (ipRes.loc) {
+      const [lat, lon] = ipRes.loc.split(',');
+      const map = L.map('map').setView([lat, lon], 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data © OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([lat, lon]).addTo(map).bindPopup(`${domain}`).openPopup();
+    }
+  } catch {
+    results.innerHTML += `<h3>IP Info</h3><p>Failed to fetch</p>`;
+  }
+}
+
+// Export as PDF
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text(`Website Footprinting Report`, 10, 10);
+  let content = `Domain: ${fullData.domain}\n\n`;
+  if (fullData.rdap) content += `WHOIS:\n${JSON.stringify(fullData.rdap, null, 2)}\n\n`;
+  if (fullData.headers) content += `Headers:\n${JSON.stringify(fullData.headers, null, 2)}\n\n`;
+  if (fullData.technology) content += `Technology:\n${fullData.technology.join('\n')}\n\n`;
+  if (fullData.dns) content += `DNS:\n${JSON.stringify(fullData.dns.Answer || {}, null, 2)}\n\n`;
+  doc.setFontSize(10);
+  doc.text(content.substring(0, 7000), 10, 20);
+  doc.save("footprint_report.pdf");
+}
+
+// Export as CSV
+function exportCSV() {
+  const flatData = {
+    domain: fullData.domain,
+    server: fullData.headers?.server || '',
+    tech: fullData.technology?.join('; ') || '',
+    whois_name: fullData.rdap?.name || '',
+    ip: fullData.ipinfo?.ip || '',
+    city: fullData.ipinfo?.city || '',
+    org: fullData.ipinfo?.org || ''
+  };
+  const csv = Papa.unparse([flatData]);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "footprint_report.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>

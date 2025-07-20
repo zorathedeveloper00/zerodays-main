@@ -1,0 +1,296 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Black Friday Chat – Gemini Only</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="favicon.ico">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      font-family: 'Courier New', monospace;
+      background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFVOZ2CsKQIPT0Lk06f5bNALaBIuEhMWppBg&s');
+      color: red;
+      overflow: hidden;
+    }
+    #sidebar {
+      width: 250px;
+      background: rgba(0,0,0,0.5);
+      border-right: 2px solid red;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease;
+    }
+    #sidebar.collapsed { width: 60px; }
+    #sidebar h2, h2 { text-align: center; color: red; margin: 10px 0; font-size: 1.1em; }
+    .menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      color: red;
+      border-bottom: 1px solid #111;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .menu-item:hover { background: rgba(0,0,0,0.6); }
+    #toggle-btn {
+      background-color: red;
+      color: #000;
+      border: none;
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      background: rgba(0,0,0,0.5);
+    }
+    .history-item {
+      padding: 8px;
+      margin: 5px 0;
+      background: rgba(0,0,0,0.5);
+      border-left: 3px solid red;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+    .history-item:hover { background: black; }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(0,0,0,0.5);
+      padding: 15px;
+      color: red;
+      font-size: 1.4em;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid red;
+    }
+    #chat-window {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.5);
+      white-space: pre-wrap;
+    }
+    .message { margin-bottom: 20px; }
+    .user { color: #00ff00; font-weight: bold; }
+    .bot { color: red; font-weight: bold; }
+    #input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 2px solid red;
+      background: rgba(0,0,0,0.5);
+    }
+    #input {
+      flex: 1;
+      padding: 10px;
+      background: #000;
+      border: 1px solid red;
+      color: #00ff00;
+      border-radius: 5px;
+    }
+    #send {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background: red;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    footer {
+      background: rgba(0,0,0,0.5);
+      color: red;
+      font-size: 0.8em;
+      text-align: center;
+      padding: 8px;
+      border-top: 1px solid red;
+    }
+    code {
+      display: block;
+      background: #110000;
+      border: 1px solid red;
+      padding: 10px;
+      margin-top: 5px;
+      color: #ff6666;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .bot img {
+      margin-top: 10px;
+      max-width: 100%;
+      max-height: 300px;
+      border: 2px solid red;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+<div id="sidebar">
+  <button id="toggle-btn">☰</button>
+  <a class="menu-item" href="dashboard/index.html">Dashboard</a>
+  <a class="menu-item" onclick="startNewSession()">+ New Session</a>
+  <a class="menu-item" href="settings/Box.html">Settings</a>
+  <a class="menu-item" href="zeroscam/camera33.html">Camera +@</a>
+  <a class="menu-item" href="tools/index.html">Tools</a>
+  <a class="menu-item" href="trackerlevel/main.html">type tracker!</a>
+  <a class="menu-item" href="genx/intelligencex.html">Gen IP v5</a>
+  <h2>History</h2>
+  <div id="history"></div>
+</div>
+
+<main>
+  <header>BlackFriday Gemini AI v1</header>
+  <div id="chat-window"></div>
+  <div id="input-area">
+    <input id="input" type="text" placeholder="Type your message..." />
+    <button id="send">Send</button>
+  </div>
+  <footer>© 2025 ZeroDayAI | Gemini API </footer>
+</main>
+
+<script>
+  const GEMINI_API_KEY = "AIzaSyCNGRzewppPMV_Um75zEBAz1B8z0j7BzZU"; // Your key
+  const chatWindow = document.getElementById("chat-window");
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const historyDiv = document.getElementById("history");
+  const sidebar = document.getElementById("sidebar");
+  const toggleBtn = document.getElementById("toggle-btn");
+
+  const redirects = {
+    "Trackingtools": "trackerlevel/TrapTune.html" ,
+    "livetracker": "trackerlevel/Live-tracker/test.html",
+    "betatracker": "trackerlevel/Betatracker.html",
+    "supertracker": "trackerlevel/aiornone.html",
+    "smarttracker": "trackerlevel/penultimate.html",
+    "Masteredsupertracker": "trackerlevel/Stl4.html",
+    "simpletracker": "trackerlevel/IPtrackersource/IPtracker.html",
+    "iptracker": "trackerlevel/IPtraceroute/IPtracert.html",
+    "iptraceroute": "trackerlevel/IPtraceroute/IPtracert.html",
+    "zeromapstracker" : "trackerlevel/trap.html",
+    "ultratrackersite":"trackerlevel/test.html",
+    "helpme": "Status.html",
+  };
+
+  let chatLog = [], historyLog = [];
+
+  send.onclick = () => {
+    const userMsg = input.value.trim().toLowerCase();
+    if (!userMsg) return;
+    appendMessage("You", userMsg, "user");
+    input.value = "";
+    addToHistory(userMsg);
+
+    // Redirect if matched
+    if (redirects[userMsg]) {
+      window.location.href = redirects[userMsg];
+      return;
+    }
+
+    if (userMsg === "help") {
+      const helpList = Object.entries(redirects).map(([cmd, path]) => `→ ${cmd} → ${path}`).join('\n');
+      appendMessage("Bot", "Available commands:\n\n" + helpList, "bot", true);
+      return;
+    }
+
+    chatLog.push({ role: "user", content: userMsg });
+    callGemini(chatLog);
+  };
+
+  input.addEventListener("keypress", e => {
+    if (e.key === "Enter") send.click();
+  });
+
+  toggleBtn.onclick = () => {
+    sidebar.classList.toggle("collapsed");
+  };
+
+  function appendMessage(sender, msg, type, code = false) {
+    const div = document.createElement("div");
+    div.className = "message " + type;
+    let imageTags = '';
+
+    const imgRegex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|bmp))/gi;
+    const matches = [...msg.matchAll(imgRegex)];
+
+    if (matches.length > 0) {
+      matches.forEach(match => {
+        imageTags += `<br><img src="${match[0]}" alt="Gemini image response" />`;
+      });
+    }
+
+    div.innerHTML = `<strong class="${type}">${sender}:</strong><br>${code ? `<code>${msg}</code>` : msg}${imageTags}`;
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function addToHistory(text) {
+    if (!historyLog.includes(text)) {
+      historyLog.unshift(text);
+      if (historyLog.length > 50) historyLog.pop();
+      renderHistory();
+    }
+  }
+
+  function renderHistory() {
+    historyDiv.innerHTML = "";
+    historyLog.forEach(item => {
+      const div = document.createElement("div");
+      div.textContent = item.length > 25 ? item.slice(0, 22) + "..." : item;
+      div.title = item;
+      div.className = "history-item";
+      div.onclick = () => {
+        input.value = item;
+        input.focus();
+      };
+      historyDiv.appendChild(div);
+    });
+  }
+
+  function startNewSession() {
+    chatLog = [];
+    chatWindow.innerHTML = "";
+    appendMessage("Bot", "New Gemini session started.", "bot");
+  }
+
+  async function callGemini(messages) {
+    appendMessage("Bot", "Loading ...", "bot");
+    try {
+      const contents = messages.map(m => ({
+        role: m.role === "user" ? "user" : "model",
+        parts: [{ text: m.content }]
+      }));
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents })
+      });
+
+      const data = await res.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "⚠️ No valid response from Gemini.";
+      document.querySelectorAll(".bot").forEach(m => {
+        if (m.textContent.includes("Loading")) m.remove();
+      });
+      appendMessage("Bot", reply, "bot");
+      chatLog.push({ role: "assistant", content: reply });
+    } catch (e) {
+      appendMessage("Bot", "❌ Gemini API error: " + e.message, "bot");
+    }
+  }
+
+  window.onload = () => {
+    appendMessage("Bot", "Welcome to Gemini AI Chat! Type 'help' for commands or enter custom keywords.", "bot");
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome - Introduction Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      color: #00f5ff;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+background: rgba(0,0,0,0.5);
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 30px;
+      color: #00f5ff;
+      font-size: 22px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 12px 10px;
+      text-decoration: none;
+      color: #00f5ff;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+
+    .sidebar a:hover {
+background: rgba(0,0,0,0.5);
+      color: #00f5ff;
+    }
+
+    .content {
+      margin-left: 250px;
+      padding: 40px;
+      flex: 1;
+      transition: margin-left 0.3s ease;
+    }
+
+    .toggle-btn {
+      display: none;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 24px;
+background: rgba(0,0,0,0.5);
+      color: #00f5ff;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media screen and (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .content {
+        margin-left: 0;
+      }
+      .toggle-btn {
+        display: block;
+      }
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 32px;
+      color: #00f5ff;
+    }
+
+    p {
+      line-height: 1.6;
+      font-size: 18px;
+      color: #00f5ff;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+
+<div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+
+    <a href="#">🧪 Web App Analysis</a>
+<a href="OSINTExternalData/project.html">🧪 OSINT & External Data Enrichment Tool</a>
+    
+  </div>
+  
+  <div class="content">
+    <h1>Welcome to web App Analysis</h1>
+    <p>
+The **Zero-Day Tool** provided by Zora the Hacker is an educational platform designed to help users learn and understand the intricacies of zero-day vulnerabilities. The tool is not intended for malicious use or to encourage harmful activities, but rather as a resource to deepen one’s knowledge of cybersecurity, hacking techniques, and the duality of intentions behind using such tools. 
+    </p>
+    <hr>
+    <br>
+    <p>
+Zero-day vulnerabilities are often exploited by hackers to bypass security systems, gain unauthorized access, and perform covert attacks on both public and private infrastructures. However, these vulnerabilities can also be used for ethical purposes, such as by security professionals and ethical hackers, who report and patch these flaws to protect systems and users from potential threats.
+    </p>
+    <hr>
+    <br>
+    <p>
+The Zero-Day Tool is a neutral platform that presents the world of hacking and cybersecurity from both perspectives—those of the attacker and the defender. While the tool provides the necessary knowledge to understand how zero-day exploits function and how they can be exploited or mitigated, it emphasizes that the actions taken with this knowledge are entirely up to the user. Whether a person uses these insights for constructive or destructive purposes, the responsibility for those actions lies with the individual, not the platform or the creator.
+    </p>
+    <hr>
+    <br>
+    <p>
+Zora the Hacker, the creator of this tool, stresses that the aim is not to promote chaos or encourage the use of zero-day exploits for malicious intent. Instead, the goal is to help users master the concepts and techniques that underpin the exploitation of vulnerabilities so they can decide for themselves how they want to use this knowledge—either for good or bad intentions. Whether an individual chooses to use the tool to enhance their ethical hacking skills, secure their own systems, or engage in unlawful activities, Zora the Hacker disclaims any responsibility for the consequences that arise from such actions.
+    </p>
+    <hr>
+    <br>
+    <p>
+The tool is designed for those who seek to understand the delicate balance between hacking and ethical practices, offering a way to learn the complexities of the hacking world while making it clear that how users apply this knowledge is their personal choice. It provides both theoretical and practical insights into zero-day vulnerabilities, allowing users to dive deep into the science of hacking, security exploitation, and the resulting impact on the digital world. Ultimately, Zora the Hacker encourages self-awareness, ethical decision-making, and responsibility when using such powerful tools in the ever-evolving landscape of cybersecurity.
+    </p>
+  </div>
+    <br>
+    <hr>
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+  </script>
+
+</body>
+</html> 

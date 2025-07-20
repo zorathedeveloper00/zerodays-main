@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Domain & IP Intelligence Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      color: #00f5ff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00f5ff;
+    }
+    input, button, select {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      width: 250px;
+    }
+    button {
+      background: #00f5ff;
+      color: blue;
+      cursor: pointer;
+    }
+    button:hover {
+background: rgba(0,0,0,0.5);
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+    }
+    .map {
+      height: 300px;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+  </style>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+</head>
+<body>
+  <h1>🌐 Domain & IP Intelligence Tool</h1>
+  <div style="text-align:center;">
+    <input type="text" id="input" placeholder="Enter domain or IP" />
+    <button onclick="analyze()">Analyze</button>
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="window.print()">Print as PDF</button>
+  </div>
+  <div id="results" class="result"></div>
+  <div id="map" class="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    async function analyze() {
+      const query = document.getElementById('input').value.trim();
+      if (!query) return alert('Please enter a domain or IP');
+
+      document.getElementById('results').innerHTML = "<b>Loading...</b>";
+
+      // Fetching IP and DNS Information
+      const ipapi = await fetch(`https://ipapi.co/${query}/json/`).then(r => r.json());
+      const dns = await fetch(`https://dns.google/resolve?name=${query}&type=A`).then(r => r.json());
+      const reverse = await fetch(`https://api.hackertarget.com/reverseiplookup/?q=${query}`).then(r => r.text()).catch(() => "N/A");
+      const rdap = await fetch(`https://rdap.org/ip/${ipapi.ip}`).then(r => r.json()).catch(() => ({}));
+
+      // Geolocation, DNS Records, and Email Validation
+      const geolocation = `Location: ${ipapi.city}, ${ipapi.region}, ${ipapi.country_name} <br> Latitude: ${ipapi.latitude}, Longitude: ${ipapi.longitude}`;
+      const dnsRecords = dns.Answer?.map(ans => `${ans.name} - ${ans.data}`).join('<br>') || "No DNS A records";
+
+      const blacklistMock = `Blacklisted: No<br>Abuse Reports: 0<br>Reputation: Clean`;
+      const emailValidation = await checkEmail(query);
+
+      // Output data
+      const output = `
+        <h3>General Info</h3>
+        IP: ${ipapi.ip} <br> ASN: ${ipapi.asn} <br> Org: ${ipapi.org} <br> ${geolocation}
+        <h3>WHOIS (RDAP)</h3>
+        Handle: ${rdap.handle || "N/A"} <br> Start Address: ${rdap.startAddress || "N/A"} <br> Name: ${rdap.name || "N/A"}
+        <h3>DNS Records</h3>
+        ${dnsRecords}
+        <h3>Blacklist Check (Mock)</h3>
+        ${blacklistMock}
+        <h3>Reverse IP</h3>
+        ${reverse.replace(/\n/g, '<br>')}
+        <h3>Email Validation</h3>
+        ${emailValidation}
+      `;
+
+      document.getElementById('results').innerHTML = output;
+
+      // Load map for geolocation
+      setTimeout(() => {
+        const map = L.map('map').setView([ipapi.latitude, ipapi.longitude], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([ipapi.latitude, ipapi.longitude]).addTo(map)
+          .bindPopup(`${ipapi.ip} - ${ipapi.city}, ${ipapi.country_name}`).openPopup();
+      }, 500);
+    }
+
+    // Email Validation using MX lookup
+    async function checkEmail(email) {
+      const mxRecords = await fetch(`https://dns.google/resolve?name=${email}&type=MX`).then(r => r.json());
+      if (mxRecords.Answer) {
+        return "Valid Email: MX records found.";
+      } else {
+        return "Invalid Email: No MX records found.";
+      }
+    }
+
+    // Export Results as CSV
+    function exportCSV() {
+      const text = document.getElementById('results').innerText;
+      const csvContent = "data:text/csv;charset=utf-8," + text.replace(/\n/g, ",").replace(/,,+/g, ",");
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI(csvContent));
+      link.setAttribute("download", "domain_ip_info.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>

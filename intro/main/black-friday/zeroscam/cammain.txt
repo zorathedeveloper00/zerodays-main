@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📷 Nearby Public Webcams Logger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { background:#0f172a; color:#e2e8f0; font-family:monospace; padding:20px; }
+    h1, h3 { color:#38bdf8; }
+    button { margin:4px; padding:8px 16px; background:#2563eb; border:none; color:#fff; cursor:pointer; }
+    button:hover { background:#1e40af; }
+    .log { margin-top:20px; padding:10px; background:#1e293b; border:1px dashed #38bdf8;
+           height:300px; overflow:auto; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>📷 Nearby Public Webcams Logger</h1>
+
+  <button onclick="fetchNearby()">🔍 Fetch Nearby Cameras</button>
+  <button onclick="clearLog()">🧹 Clear Log</button>
+  <button onclick="downloadLog()">💾 Download Log</button>
+
+  <h3>📝 Camera Logs</h3>
+  <div class="log" id="log"></div>
+
+  <script>
+    const logEl = document.getElementById('log');
+
+    function log(msg) {
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function clearLog() {
+      logEl.textContent = '';
+    }
+
+    function downloadLog() {
+      const blob = new Blob([logEl.textContent], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'cctv_camera_logs.txt';
+      a.click();
+    }
+
+    async function fetchNearby() {
+      clearLog();
+      log('📍 Requesting location…');
+
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lon = pos.coords.longitude.toFixed(6);
+        log(`📌 Location: ${lat}, ${lon}`);
+
+        const url = `http://api.narodmon.com/webcamsNearby?lat=${lat}&lon=${lon}&radius=10`;
+        log(`📡 Fetching webcams within 10 km…`);
+
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(res.statusText);
+          const data = await res.json();
+          const cams = data.webcams || [];
+          log(`✅ Found ${cams.length} cameras:\n`);
+          cams.forEach(c => {
+            log(`ID:${c.id} | Name:"${c.name}" | Loc:"${c.location}"`);
+            log(`   Snapshot: ${c.image}`);
+            log(`   Coordinates: ${c.lat},${c.lon} | Distance: ${c.distance} km`);
+            log('');
+          });
+        } catch (e) {
+          log('❌ Error: ' + e.message);
+        }
+      }, err => {
+        log('⚠️ Location error: ' + err.message);
+      });
+    }
+  </script>
+</body>
+</html>

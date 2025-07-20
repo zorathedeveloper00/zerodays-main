@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Host to IP Recon Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    body {
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      color: #00f5ff;
+      font-family: 'Fira Code', monospace;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .scanner {
+      max-width: 800px;
+      margin: 0 auto;
+background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    input[type="text"] {
+      width: 65%;
+      padding: 10px;
+background: rgba(0,0,0,0.5);
+      color: #00f5ff;
+      border: 1px solid #00f5ff;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #00f5ff;
+      color: blue;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+background: rgba(0,0,0,0.5);
+    }
+
+    .terminal {
+      margin-top: 20px;
+background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #00f5ff;
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Advanced Host to IP Recon Tool</h1>
+  <div class="scanner">
+    <input type="text" id="host" placeholder="Enter domain or IP..." />
+    <button onclick="startRecon()">Start Recon</button>
+    <div class="controls">
+      <button onclick="exportJSON()">Export JSON</button>
+      <button onclick="generateQR()">QR Code</button>
+    </div>
+    <div class="terminal" id="output">[~] Awaiting input...</div>
+    <div id="qr" style="margin-top: 10px;"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script>
+    const output = document.getElementById("output");
+    let reconData = {};
+    const apiKey = "qSvx1UaT95HigxOb9+cVJQ==46DbTPUh08PEiKuG";
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function typeOut(text) {
+      for (let char of text) {
+        output.innerHTML += char;
+        output.scrollTop = output.scrollHeight;
+        await sleep(5);
+      }
+    }
+
+    async function startRecon() {
+      const host = document.getElementById("host").value.trim();
+      if (!host) return alert("Enter a valid domain or IP.");
+      output.innerHTML = "";
+      reconData = { host, timestamp: new Date().toISOString(), results: {} };
+
+      await typeOut(`[~] Starting recon on ${host}...\n`);
+
+      await fetchDNS(host);
+      await fetchGeoIP(host);
+      await fetchWhois(host);
+      await reverseDNS(host);
+      await scanPorts(host);
+      await subdomainEnum(host);
+
+      await typeOut(`\n[✓] Recon complete.\n`);
+    }
+
+    async function fetchDNS(host) {
+      await typeOut(`\n[+] DNS Records...\n`);
+      try {
+        const res = await fetch(`https://dns.google/resolve?name=${host}`);
+        const data = await res.json();
+        const records = data.Answer || [];
+        reconData.results.dns = records.map(r => `${r.type} → ${r.data}`);
+        for (const r of reconData.results.dns) await typeOut(`- ${r}\n`);
+      } catch {
+        await typeOut(`[-] DNS fetch failed\n`);
+      }
+    }
+
+    async function fetchGeoIP(host) {
+      await typeOut(`\n[+] GeoIP Info...\n`);
+      try {
+        const res = await fetch(`https://ipapi.co/${host}/json/`);
+        const data = await res.json();
+        reconData.results.geoip = data;
+        const lines = [`IP: ${data.ip}`, `City: ${data.city}`, `Country: ${data.country_name}`, `ASN: ${data.org}`];
+        for (let line of lines) await typeOut(`- ${line}\n`);
+      } catch {
+        await typeOut(`[-] GeoIP failed\n`);
+      }
+    }
+
+    async function fetchWhois(host) {
+      await typeOut(`\n[+] WHOIS Info...\n`);
+      try {
+        const res = await fetch(`https://api.api-ninjas.com/v1/whois?domain=${host}`, {
+          headers: { 'X-Api-Key': apiKey }
+        });
+        const data = await res.json();
+        reconData.results.whois = data;
+        const lines = [
+          `Registrar: ${data.registrar_name}`,
+          `Created: ${data.creation_date}`,
+          `Expires: ${data.expiration_date}`,
+          `Status: ${data.status}`,
+          `Email: ${data.admin_email || 'N/A'}`
+        ];
+        for (let line of lines) await typeOut(`- ${line}\n`);
+      } catch {
+        await typeOut(`[-] WHOIS failed\n`);
+      }
+    }
+
+    async function reverseDNS(host) {
+      await typeOut(`\n[+] Reverse DNS...\n`);
+      try {
+        const res = await fetch(`https://dns.google/resolve?name=${host}&type=PTR`);
+        const data = await res.json();
+        const ptr = (data.Answer || []).map(x => x.data);
+        reconData.results.reverse_dns = ptr;
+        for (let p of ptr) await typeOut(`- PTR: ${p}\n`);
+      } catch {
+        await typeOut(`[-] Reverse DNS failed\n`);
+      }
+    }
+
+    async function scanPorts(host) {
+      await typeOut(`\n[+] Simulating Port Scan (all ports 1-65535)...\n`);
+      const openPorts = [];
+      
+      // Simulated top ports
+      const ports = [
+        { port: 22, service: "SSH" },
+        { port: 80, service: "HTTP" },
+        { port: 443, service: "HTTPS" },
+        { port: 3306, service: "MySQL" },
+        { port: 21, service: "FTP" },
+        { port: 53, service: "DNS" },
+        { port: 25, service: "SMTP" },
+        { port: 110, service: "POP3" }
+      ];
+
+      // Add simulated open ports
+      for (let i = 1; i <= 65535; i++) {
+        if (i % 1000 === 0) {  // Display every 1000th port for performance reasons
+          openPorts.push({ port: i, service: `Service-${i}` });
+        }
+      }
+
+      reconData.results.ports = openPorts;
+      for (let p of openPorts) await typeOut(`- ${p.port}/tcp open ${p.service}\n`);
+    }
+
+    async function subdomainEnum(host) {
+      await typeOut(`\n[+] Subdomain Enumeration (simulated)...\n`);
+      const subs = [`api.${host}`, `mail.${host}`, `dev.${host}`, `cpanel.${host}`];
+      reconData.results.subdomains = subs;
+      for (let s of subs) await typeOut(`- Found: ${s}\n`);
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(reconData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `recon_${reconData.host}.json`;
+      a.click();
+    }
+
+    function generateQR() {
+      const qr = new QRious({
+        element: document.createElement("canvas"),
+        value: JSON.stringify(reconData),
+        size: 200,
+        background: '#0a0a0a',
+        foreground: '#00ffcc'
+      });
+      const qrDiv = document.getElementById("qr");
+      qrDiv.innerHTML = "";
+      qrDiv.appendChild(qr.element);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+
+
+### **1. Network Scanning & Reconnaissance**
+
+* **Nmap** – Network scanner for open ports, OS detection.
+* **Masscan** – Extremely fast port scanner.
+* **Angry IP Scanner** – GUI-based IP range scanner.
+* **Shodan / Censys** – Search engine for internet-connected devices.
+* **Netdiscover** – ARP scanner for local network discovery.
+
+---
+
+### **2. Vulnerability Scanning**
+
+* **Nessus** – Industry-standard vulnerability scanner.
+* **OpenVAS** – Open-source vulnerability scanning.
+* **Nikto** – Web server scanner for common vulnerabilities.
+* **Acunetix** – Commercial web vulnerability scanner.
+* **ZAP (Zed Attack Proxy)** – OWASP tool for finding security bugs in web apps.
+
+---
+
+### **3. Exploitation Frameworks**
+
+* **Metasploit Framework** – Exploitation and payload generation.
+* **BeEF** – Browser Exploitation Framework.
+* **RouterSploit** – Exploitation of embedded/IoT devices.
+* **Exploit-DB** – Database of public exploits and PoCs.
+
+---
+
+### **4. Wireless & Bluetooth Hacking**
+
+* **Aircrack-ng** – Crack WEP/WPA Wi-Fi keys.
+* **Kismet** – Wi-Fi and Bluetooth sniffer.
+* **Wireshark** – Packet sniffer with deep inspection.
+* **Reaver** – WPS brute-force tool.
+* **Bettercap** – Real-time network monitoring and MITM attacks.
+
+---
+
+### **5. Password Cracking**
+
+* **John the Ripper** – Fast password cracker.
+* **Hashcat** – Advanced GPU-accelerated password cracking.
+* **Hydra** – Brute-force tool for remote logins.
+* **CrackStation** – Online hash lookup.
+* **CeWL** – Custom wordlist generator based on target website.
+
+---
+
+### **6. Web Application Testing**
+
+* **Burp Suite** – Web vulnerability testing and proxy.
+* **OWASP ZAP** – Alternative to Burp, fully open-source.
+* **SQLMap** – Automated SQL injection testing.
+* **Wfuzz / Dirb / Gobuster** – Web fuzzing and directory brute-forcing.
+* **XSStrike** – XSS vulnerability scanner and payload generator.
+
+---
+
+### **7. OSINT (Open Source Intelligence)**
+
+* **theHarvester** – Email, domain, and name gathering.
+* **Maltego** – Visual link analysis and OSINT data mining.
+* **Recon-ng** – Modular recon framework.
+* **SpiderFoot** – Automated OSINT reconnaissance.
+* **FOCA** – Metadata and document analysis.
+
+---
+
+### **8. Privilege Escalation & Enumeration**
+
+* **LinPEAS / WinPEAS** – Privilege escalation checkers.
+* **PowerUp / PowerSploit** – PowerShell scripts for privilege testing.
+* **Enum4linux** – SMB enumeration tool.
+* **Linux Exploit Suggester / Windows Exploit Suggester** – Kernel-based exploit suggesters.
+
+---
+
+### **9. Social Engineering & Phishing**
+
+* **SET (Social Engineer Toolkit)** – Toolkit for phishing, payloads, and cloning.
+* **Gophish** – Phishing campaign framework.
+* **Evilginx2** – Advanced phishing with MITM and token stealing.
+
+---
+
+### **10. Reverse Engineering & Malware Analysis**
+
+* **Ghidra** – Open-source reverse engineering suite by NSA.
+* **IDA Free** – Popular reverse engineering tool (limited free version).
+* **OllyDbg / x64dbg** – Windows debuggers.
+* **Radare2** – Command-line reverse engineering.
+* **Apktool / jadx** – Android app decompilation.
+
+---
+
+### **11. Packet Crafting & Sniffing**
+
+* **Scapy** – Python-based packet crafting.
+* **Hping3** – Custom TCP/IP packet generator.
+* **Tcpdump** – CLI packet capture tool.
+* **Ettercap** – ARP poisoning and sniffing.
+* **Mitmproxy** – Intercepting HTTP/HTTPS proxy.
+
+---
+
+### **12. Forensics & Memory Analysis**
+
+* **Volatility** – RAM analysis.
+* **Autopsy / Sleuth Kit** – Digital forensics tools.
+* **Binwalk** – Firmware analysis.
+* **ExifTool** – Metadata extraction from files.
+
+---
+
+### **13. Container & Cloud Security**
+
+* **Trivy** – Vulnerability scanner for Docker images.
+* **Kube-hunter** – Kubernetes penetration testing.
+* **ScoutSuite** – Multi-cloud security auditing.
+* **Cloudsploit** – AWS security scanning.
+
+---
+
+### **14. Mobile Hacking Tools**
+
+* **MobSF** – Mobile Security Framework.
+* **Frida** – Dynamic instrumentation toolkit.
+* **Drozer** – Android app assessment framework.
+
+---
+
+### **15. C2 (Command & Control) Frameworks**
+
+* **Cobalt Strike (commercial)** – Advanced red teaming.
+* **Sliver** – Open-source C2 framework.
+* **Mythic** – Python3-based post-exploitation framework.
+
+---
+
+Would you like a downloadable list, GitHub links, or a categorized HTML version of this?

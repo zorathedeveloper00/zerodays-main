@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Info Viewer with API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        h1 {
+            color:#00f5ff;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            font-size: 18px;
+            color:#00f5ff;
+            margin: 10px 0;
+        }
+
+        .info strong {
+            color:#00f5ff;
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color:#00f5ff;
+            color: blue;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+background: rgba(0,0,0,0.5);
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+            color:#00f5ff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Information Viewer with API</h1>
+
+        <div class="info-section">
+            <p class="info"><strong>Operating System:</strong> <span id="os-name">Loading...</span></p>
+            <p class="info"><strong>Browser:</strong> <span id="browser-name">Loading...</span></p>
+            <p class="info"><strong>Screen Resolution:</strong> <span id="screen-res">Loading...</span></p>
+            <p class="info"><strong>Available Memory (GB):</strong> <span id="memory">Loading...</span></p>
+            <p class="info"><strong>IP Address:</strong> <span id="ip-address">Loading...</span></p>
+        </div>
+
+        <div class="button-container">
+            <button onclick="reloadInfo()">Reload Information</button>
+        </div>
+    </div>
+
+    <script>
+        // Get and display system information via API
+        function getSystemInfo() {
+            // Fetch all info from an external API service
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(data => {
+                    // IP Address
+                    document.getElementById('ip-address').textContent = data.ip;
+
+                    // Browser and Operating System Info
+                    document.getElementById('browser-name').textContent = getBrowser();
+                    document.getElementById('os-name').textContent = data.os || "Unknown OS";
+
+                    // Screen Resolution
+                    let screenResolution = `${window.screen.width}x${window.screen.height}`;
+                    document.getElementById('screen-res').textContent = screenResolution;
+
+                    // Memory Info (approximate)
+                    if (navigator.deviceMemory) {
+                        document.getElementById('memory').textContent = `${navigator.deviceMemory} GB`;
+                    } else {
+                        document.getElementById('memory').textContent = "Unavailable";
+                    }
+                })
+                .catch(err => {
+                    console.log("Error fetching data: ", err);
+                    document.getElementById('ip-address').textContent = "Unable to retrieve";
+                    document.getElementById('browser-name').textContent = "Unable to retrieve";
+                    document.getElementById('os-name').textContent = "Unable to retrieve";
+                    document.getElementById('screen-res').textContent = "Unable to retrieve";
+                    document.getElementById('memory').textContent = "Unable to retrieve";
+                });
+        }
+
+        // Detect browser name
+        function getBrowser() {
+            let userAgent = navigator.userAgent;
+            if (userAgent.indexOf('Chrome') > -1) {
+                return 'Chrome';
+            } else if (userAgent.indexOf('Firefox') > -1) {
+                return 'Firefox';
+            } else if (userAgent.indexOf('Safari') > -1) {
+                return 'Safari';
+            } else if (userAgent.indexOf('Edge') > -1) {
+                return 'Edge';
+            } else {
+                return 'Unknown Browser';
+            }
+        }
+
+        // Reload the information when the button is clicked
+        function reloadInfo() {
+            getSystemInfo();
+        }
+
+        // Load system info on page load
+        window.onload = getSystemInfo;
+    </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🧰 Kali Tools | ZeroDays(coming soon!)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      font-family: 'Courier New', monospace;
+      background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFVOZ2CsKQIPT0Lk06f5bNALaBIuEhMWppBg&s');
+      color: red;
+      overflow: hidden;
+    }
+
+    #sidebar {
+      width: 250px;
+      background: rgba(0, 0, 0, 0.5);
+      border-right: 2px solid red;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease;
+    }
+
+    #sidebar.collapsed {
+      width: 60px;
+    }
+
+    #sidebar h2 {
+      text-align: center;
+      font-size: 1.2em;
+      margin: 10px 0;
+      color: red;
+    }
+
+    #sidebar a {
+      padding: 12px 20px;
+      display: block;
+      color: red;
+      text-decoration: none;
+      border-bottom: 1px solid #111;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    #sidebar a:hover {
+      background: rgba(255, 0, 0, 0.2);
+    }
+
+    #toggle-btn {
+      background-color: red;
+      color: #000;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(0, 0, 0, 0.5);
+      color: red;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5em;
+      border-bottom: 2px solid red;
+    }
+
+    footer {
+      background: rgba(0, 0, 0, 0.5);
+      color: red;
+      font-size: 0.8em;
+      text-align: center;
+      padding: 8px;
+      border-top: 1px solid;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <button id="toggle-btn">☰</button>
+    <h2>Menu</h2>
+    <a href="Information-gathering/page.html">🌐 Information Gathering
+    <strong>(coming soon!)</strong></a>
+    <a href="Vulnerability-Analysis/page.html">🔍 Vulnerability Analysis    <strong>(coming soon!)</strong></a>
+    <a href="Web-App-Analysis/page.html">🧪 Web App Analysis    <strong>(coming soon!)</strong></a>
+    <a href="Database-Assessmen/page.html">🗃️ Database Assessment    <strong>(coming soon!)</strong></a>
+    <a href="Password-attack/page.html">🔐 Password Attack    <strong>(coming soon!)</strong></a>
+    <a href="Wireless-Attack/page.html">📡 Wireless Attack    <strong>(coming soon!)</strong></a>
+    <a href="Reverse-Engineerin/page.html">🛠️ Reverse Engineering    <strong>(coming soon!)</strong></a>
+    <a href="Exploitation-Tools/page.html">💣 Exploitation Tools    <strong>(coming soon!)</strong></a>
+    <a href="Sniffing-&-Spoofing/page.html">🕵️ Sniffing & Spoofing    <strong>(coming soon!)</strong></a>
+    <a href="Post-Exploitation/page.html">🧬 Post Exploitation    <strong>(coming soon!)</strong></a>
+    <a href="Forensics/page.html">🧾 Forensics    <strong>(coming soon!)</strong></a>
+    <a href="Reporting-Tools/page.html">🚨 Reporting Tools    <strong>(coming soon!)</strong></a>
+    <a href="Social-Engineering/page.html">🎭 Social Engineering    <strong>(coming soon!)</strong></a>
+    <a href="System-Services/page.html">⚙️ System Services    <strong>(coming soon!)</strong></a>
+  </div>
+
+  <main>
+    <header>ZeroDays Kali Tools Launcher</header>
+    <footer>
+      🧰 Ethical hacking toolkit UI | For educational use only. <br>&copy; 2025 ZeroDayAI
+    </footer>
+  </main>
+
+  <script>
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggle-btn");
+
+    toggleBtn.onclick = () => {
+      sidebar.classList.toggle("collapsed");
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>🌍 Multi‑Source CCTV Log Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { background:#0f172a; color:#e2e8f0; font-family:monospace; padding:20px; }
+    h1,h3 { color:#38bdf8; }
+    button, input { padding:8px; margin:4px; background:#1e293b; border:none; color:#e2e8f0; cursor:pointer; }
+    button:hover { background:#2563eb; }
+    .log { margin-top:20px; padding:10px; background:#1e293b; border:1px dashed #38bdf8; height:400px; overflow:auto; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>📷 Multi‑Source Public CCTV Logs</h1>
+
+  <button onclick="windyRegion()">Windy: by Country Code</button>
+  <input id="windyCountry" placeholder="e.g. US" />
+  
+  <button onclick="windyNearby()">Windy: Nearby (geo)</button>
+  
+  <button onclick="narodNearby()">NarodMon: Nearby (geo)</button>
+  
+  <button onclick="brusselsCams()">Brussels Open Data</button>
+  
+  <button onclick="clearLog()">🧹 Clear Logs</button>
+  <button onclick="downloadLog()">💾 Download Logs</button>
+
+  <h3>📄 Log Output</h3>
+  <div class="log" id="log"></div>
+
+<script>
+const logEl = document.getElementById('log');
+function log(msg){ logEl.textContent+=msg+"\n"; logEl.scrollTop = logEl.scrollHeight; }
+function clearLog(){ logEl.textContent=''; }
+function downloadLog(){
+  const blob = new Blob([logEl.textContent], {type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='multi_cctv_logs.txt';
+  a.click();
+}
+
+// 1. Windy by country
+async function windyRegion(){
+  const cc = document.getElementById('windyCountry').value.trim().toUpperCase();
+  if(cc.length!==2){ alert('Use ISO-2 country code'); return; }
+  clearLog(); log(`🔍 Windy: fetching webcams in ${cc}...`);
+  const url=`https://api.windy.com/api/webcams/v2/list/country=${cc}?show=webcams:location,player&key=1D5i0YvpyVtNQM66raOhUPa4tKRpbx`;
+  try {
+    const r=await fetch(url); const j=await r.json();
+    log(`✅ Windy returned ${j.result.webcams.length} cams`);
+    j.result.webcams.forEach(c=>{
+      const str = c.player.live || c.player.day || 'no stream';
+      log(`[Windy][${cc}] ${c.title} → ${str}`);
+    });
+  }catch(e){ log('⚠️ Windy error: '+e.message); }
+}
+
+// 2. Windy Nearby
+function windyNearby(){
+  clearLog(); log('📍 Getting location for Windy Nearby...');
+  navigator.geolocation.getCurrentPosition(async p=>{
+    const {latitude,longitude} = p.coords;
+    const url=`https://api.windy.com/api/webcams/v2/list/nearby=${latitude},${longitude},50?show=webcams:location,player&key=1D5i0YvpyVtNQM66raOhUPa4tKRpbx`;
+    log(`🔍 Fetching webcams near you...`);
+    try {
+      const r=await fetch(url); const j=await r.json();
+      log(`✅ Found ${j.result.webcams.length} nearby cams`);
+      j.result.webcams.forEach(c => {
+        const str = c.player.live || c.player.day || 'no stream';
+        log(`[Windy Nearby] ${c.title} → ${str}`);
+      });
+    } catch(e){ log('⚠️ Windy Nearby error: '+e); }
+  }, e=>log('⚠️ Geolocation error: '+e.message));
+}
+
+// 3. NarodMon webcamsNearby
+function narodNearby(){
+  clearLog(); log('📍 Getting location for NarodMon...');
+  navigator.geolocation.getCurrentPosition(async p=>{
+    const {latitude,longitude} = p.coords;
+    const url=`http://api.narodmon.com/webcamsNearby?lat=${latitude}&lon=${longitude}&radius=10`;
+    log('🔍 Fetching NarodMon cameras...');
+    try {
+      const r=await fetch(url); const j=await r.json();
+      log(`✅ Found ${j.webcams.length} cameras`);
+      j.webcams.forEach(c=>{
+        log(`[NarodMon] ${c.name} @ ${c.lat},${c.lon} → ${c.image}`);
+      });
+    }catch(e){ log('⚠️ NarodMon error: '+e.message); }
+  }, e=>log('⚠️ Geolocation error: '+e.message));
+}
+
+// 4. Brussels Open Data
+async function brusselsCams(){
+  clearLog(); log('🔍 Fetching Brussels webcams dataset...');
+  // public CSV export
+  const url='https://bruxellesdata.opendatasoft.com/api/records/1.0/search/?dataset=webcams&rows=100';
+  try {
+    const r=await fetch(url); const j=await r.json();
+    log(`✅ Found ${j.nhits} records in Brussels`);
+    j.records.forEach(rec=>{
+      const f=rec.fields, title=f.title||f.adresse||'Unnamed';
+      log(`[Brussels] ${title} @ ${f.latitude},${f.longitude}`);
+    });
+  }catch(e){ log('⚠️ Brussels API error: '+e.message); }
+}
+</script>
+</body>
+</html>

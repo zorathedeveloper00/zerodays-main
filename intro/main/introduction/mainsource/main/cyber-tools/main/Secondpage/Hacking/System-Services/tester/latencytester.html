@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Latency Tester</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbG-2pk0BWznAIYFdl9owR7HghJnm2HpLVmo03SVIoEkP6haMKTeORI9JE&s=10');
+      color:#00f5ff;
+    }
+    header {
+background: rgba(0,0,0,0.5);
+      padding: 20px;
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: bold;
+      color:#00f5ff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    .button {
+      background: #00e0ff;
+      color: blue;
+      border: none;
+      padding: 12px 20px;
+      margin: 10px 5px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .button:hover {
+background: rgba(0,0,0,0.5);
+    }
+    .results {
+      margin-top: 20px;
+background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .results div {
+      margin-bottom: 12px;
+      font-size: 1.2em;
+    }
+    canvas.gauge {
+      margin: 10px;
+background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+    }
+    .gauges {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    .history {
+      margin-top: 20px;
+background: rgba(0,0,0,0.5);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .history div {
+      font-size: 1.2em;
+      margin-bottom: 8px;
+      color:#00e0ff;
+    }
+    #pingServerInput {
+      width: 100%;
+      padding: 8px;
+      margin-top: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    canvas#latencyChart {
+      width: 100%;
+      height: 200px;
+      margin-top: 20px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>🌐 Latency Tester</header>
+  <main>
+    <button class="button" onclick="runTests()">▶️ Start Test</button>
+    <div>
+      <label for="pingServerInput">Ping to Server (e.g., google.com):</label>
+      <input id="pingServerInput" type="text" placeholder="Enter server address (e.g., google.com)">
+      <button class="button" onclick="pingServer()">🔄 Ping Server</button>
+    </div>
+
+    <div class="results" id="results">
+      <div>📶 Latency: <span id="latency">--</span> ms</div>
+    </div>
+
+    <div class="gauges">
+      <canvas id="gaugeLatency" class="gauge" width="150" height="150"></canvas>
+    </div>
+
+    <canvas id="latencyChart"></canvas>
+
+    <div class="history" id="history">
+      <h3>Test History:</h3>
+      <div id="historyContent">No history available.</div>
+    </div>
+  </main>
+
+  <script>
+    let latencyData = [];
+
+    async function runTests() {
+      document.getElementById("latency").textContent = "0.00";
+
+      latencyData = [];
+      drawGauge("gaugeLatency", 0, 300, "Latency");
+
+      const latency = await testLatencyRealTime();
+
+      drawGauge("gaugeLatency", latency, 300, "Latency");
+
+      drawLatencyChart();
+    }
+
+    async function testLatencyRealTime(samples = 6) {
+      let total = 0;
+      for (let i = 0; i < samples; i++) {
+        const start = performance.now();
+        try {
+          await fetch("https://1.1.1.1/cdn-cgi/trace", { cache: "no-store" });
+        } catch {}
+        const elapsed = performance.now() - start;
+        latencyData.push(elapsed);
+        total += elapsed;
+        document.getElementById("latency").textContent = (total / (i + 1)).toFixed(2);
+        drawGauge("gaugeLatency", total / (i + 1), 300, "Latency");
+        drawLatencyChart();
+        await new Promise(r => setTimeout(r, 200));
+      }
+      return total / samples;
+    }
+
+    function drawGauge(id, value, max, label) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      const angle = (value / max) * Math.PI;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, 60, Math.PI, 0);
+      ctx.strokeStyle = "#444";
+      ctx.lineWidth = 10;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, 60, Math.PI, Math.PI + angle, false);
+      ctx.strokeStyle = "#00e0ff";
+      ctx.stroke();
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, w / 2, h / 2 - 10);
+      ctx.fillText(value.toFixed(1), w / 2, h / 2 + 20);
+    }
+
+    function drawLatencyChart() {
+      const canvas = document.getElementById("latencyChart");
+      const ctx = canvas.getContext("2d");
+      canvas.width = canvas.offsetWidth;
+      canvas.height = 200;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#00e0ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const maxLatency = Math.max(...latencyData) || 1;
+      latencyData.forEach((lat, i) => {
+        const x = (i / (latencyData.length - 1)) * canvas.width;
+        const y = canvas.height - (lat / maxLatency) * canvas.height;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    function saveHistory(result) {
+      const content = document.getElementById("historyContent");
+      const entry = document.createElement("div");
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ↔ ${result.latencyMs.toFixed(1)} ms`;
+      content.prepend(entry);
+    }
+
+    function pingServer() {
+      const server = document.getElementById("pingServerInput").value.trim();
+      if (!server) {
+        alert("Please enter a valid server address.");
+        return;
+      }
+
+      const start = performance.now();
+      fetch("https://" + server, { mode: "no-cors", cache: "no-store" })
+        .then(() => {
+          const elapsed = performance.now() - start;
+          alert(`Ping to ${server}: ${elapsed.toFixed(2)} ms`);
+        })
+        .catch(() => {
+          const elapsed = performance.now() - start;
+          alert(`Ping to ${server} failed (timed out in ${elapsed.toFixed(2)} ms)`);
+        });
+    }
+  </script>
+</body>
+</html>

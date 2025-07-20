@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌐 Windy-Style Forecast + Webcam Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      height: 100vh;
+    }
+    header {
+      background: #1e293b;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+    #map {
+      flex: 1;
+      height: 100%;
+    }
+    .sidebar {
+      width: 300px;
+      background: #1e293b;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid #334155;
+    }
+    .sidebar h2 {
+      margin: 0;
+      padding: 1rem;
+      background: #0f172a;
+      color: #38bdf8;
+      font-size: 1.2rem;
+    }
+    .sidebar .controls {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .sidebar button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .sidebar button:hover {
+      background: #2563eb;
+    }
+    .webcam-entry {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #334155;
+    }
+    .webcam-entry img {
+      width: 100%;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>🛰 Webcams & Tools</h2>
+    <div class="controls">
+      <button onclick="locateUser()">📍 My Location</button>
+      <button onclick="loadWebcams()">📹 Load Webcams</button>
+      <button onclick="addForecastLayer()">🌀 Forecast Overlay</button>
+    </div>
+    <div id="webcamList"></div>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const webcamApiKey = "btHcmmRlXllSC8eZ9zQ82pleThlC83W4";
+    const forecastTileKey = "7sB0VEFtGp8ZBiXN9l2DfTzBN5IDXwpL";
+    const pointForecastKey = "MxZcjEyPuaywrinavK8DnumaYiouOjjx";
+
+    const map = L.map('map').setView([14.5995, 120.9842], 6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let webcamLayer = L.layerGroup().addTo(map);
+    let forecastLayer;
+
+    function locateUser() {
+      if (!navigator.geolocation) return alert("Geolocation not supported");
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        map.setView([lat, lon], 10);
+      });
+    }
+
+    function loadWebcams() {
+      webcamLayer.clearLayers();
+      document.getElementById("webcamList").innerHTML = "<p style='padding:1rem;'>Loading webcams...</p>";
+      const bounds = map.getBounds();
+      const url = `https://api.windy.com/api/webcams/v2/list/bbox=${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}?show=webcams:image,location&key=${webcamApiKey}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("webcamList").innerHTML = "";
+          if (!data.result || !data.result.webcams) return;
+          data.result.webcams.forEach(cam => {
+            const { latitude, longitude } = cam.location;
+            const popup = `<b>${cam.title}</b><br><img src="${cam.image.preview}" width="200">`;
+            L.marker([latitude, longitude]).bindPopup(popup).addTo(webcamLayer);
+
+            const div = document.createElement("div");
+            div.className = "webcam-entry";
+            div.innerHTML = `<b>${cam.title}</b><br><img src="${cam.image.preview}" alt="${cam.title}">`;
+            document.getElementById("webcamList").appendChild(div);
+          });
+        });
+    }
+
+    function addForecastLayer() {
+      if (forecastLayer) {
+        map.removeLayer(forecastLayer);
+        forecastLayer = null;
+        return;
+      }
+      forecastLayer = L.tileLayer(`https://tiles.windy.com/tiles/wind/{z}/{x}/{y}.png?key=${forecastTileKey}`, {
+        opacity: 0.5,
+        attribution: 'Forecast © Windy'
+      }).addTo(map);
+    }
+
+    map.on('click', function(e) {
+      const lat = e.latlng.lat.toFixed(5);
+      const lon = e.latlng.lng.toFixed(5);
+      fetch(`https://api.windy.com/api/point-forecast/v2?lat=${lat}&lon=${lon}&model=gfs&parameters=wind,temp&key=${pointForecastKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lon, model: "gfs", parameters: ["wind", "temp"] })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const popupContent = `🌡 Temp: ${data.temp?.value || "N/A"} °C<br>💨 Wind: ${data.wind?.value || "N/A"} km/h`;
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(popupContent)
+          .openOn(map);
+      });
+    });
+  </script>
+</body>
+</html>
